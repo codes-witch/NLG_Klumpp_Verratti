@@ -55,11 +55,11 @@ def evaluate_captions(path):
                     if kc.classify_parts_aspect(other_part, other_aspect, cap, tokenize=True):
                         sum_false_pos += 1
 
-        precision = sum_true_pos / (sum_true_pos + sum_false_neg)
-        recall = sum_true_pos / (sum_true_pos + sum_false_pos)
+    precision = sum_true_pos / (sum_true_pos + sum_false_pos)
+    recall = sum_true_pos / (sum_true_pos + sum_false_neg)
 
-        # return a tuple (precision, recall)
-        return precision, recall
+    # return a tuple (precision, recall)
+    return precision, recall
 
 if __name__ == '__main__':
 
