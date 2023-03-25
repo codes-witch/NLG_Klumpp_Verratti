@@ -64,10 +64,10 @@ def evaluate_captions(path):
 if __name__ == '__main__':
 
     # get scores for all conditions
-    s0 = evaluate_captions("./results_two_issues/random_run_0/S0_gen_captions.json")
-    s1 = evaluate_captions("./results_two_issues/random_run_1/S1_gen_captions.json")
-    s1c = evaluate_captions("./results_two_issues/random_run_2/S1_C_gen_captions.json")
-    s1ch = evaluate_captions("./results_two_issues/random_run_3/S1_CH_wide_gen_captions.json")
+    s0 = evaluate_captions("./results/random_run_0/S0_gen_captions.json")
+    s1 = evaluate_captions("./results/random_run_1/S1_gen_captions.json")
+    s1c = evaluate_captions("./results/random_run_2/S1_C_gen_captions.json")
+    s1ch = evaluate_captions("./results/random_run_3/S1_CH_wide_gen_captions.json")
 
     # print scores
     for s, s_name in zip([s0, s1, s1c, s1ch], ["S0", "S1", "S1_C", "S1_CH"]):
