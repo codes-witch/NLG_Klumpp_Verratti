@@ -1,7 +1,7 @@
 """
 This file contains the code we used for evaluating issue alignment. It is not based on anything from Nie et al.'s
 repository. Running the main method prints precision and recall for all conditions we evaluated (given that all the
-file are in the right location).
+files are in the right location).
 
 """
 
