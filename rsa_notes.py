@@ -546,22 +546,26 @@ class BirdDistractorDataset(object):
 
     def get_caption_by_img_id(self, img_id, join_str=False):
         """
-        TODO seems not to be used
-
-        called in get_captions_for_attribute and get_captions_for_segment, but those are not called
+        Parameters:
+            -   img_id: ID of the image whose captions we want to obtain
+            -   join_str: True if we wish to obtain a list of full strings and not a list of lists of tokens
         """
         # Find what split the given image is in and get the dataset for that split
         split = self.image_id_to_split[img_id]
         dataset = self.split_to_data[split]
 
-        base_id = img_id
+        # base_id = img_id (Commented out by us)
 
         # get the image annotations for the given ID
         img_anns = dataset.coco.imgToAnns[img_id]
+        # get the annotation IDs
         ann_ids = [img_anns[rand_idx]['id'] for rand_idx in range(len(img_anns))]
 
+        # obtain the annotation tokens
         tokens = [dataset.tokens[ann_id] for ann_id in ann_ids]
+
         if join_str:
+            # get full strings from lists of tokens
             tokens = [' '.join(t) for t in tokens]
 
         return tokens
@@ -840,22 +844,47 @@ class IncRSA(RSA):
 
         return generated_captions
 
+    # def semantic_speaker_from_features(self, image_input, labels):
+    #     image_input = image_input.to(self.device)
+    #
+    #     sample_ids = self.model.generate_sentence(image_input, self.evaluator.start_word,
+    #                                               self.evaluator.end_word, labels, labels_onehot=None,
+    #                                               max_sampling_length=50, sample=False)
+    #
+    #     # if only one ID was passed, we have a 1-dimensional tensor which sentence_decode can't handle
+    #     if len(sample_ids.shape) == 1:
+    #         # make the sample_ids 2-dimensional
+    #         sample_ids = sample_ids.unsqueeze(0)
+    #
+    #     return self.sentence_decode(sample_ids)
+
     def semantic_speaker(self, image_id_list, decode_strategy="greedy"):
-        # TODO only used in greedy pragmatic speaker which is only used in debugger
+        """
+        Parameters:
+            -   image_id_list: list of image IDs to get the captions of
+            -   decode_strategy: can only be greedy in the current implementation
+        """
         # image_id here is a string!
+
+        # get the image features and their labels
         image_input, labels = self.rsa_dataset.get_batch(image_id_list)
         if decode_strategy == 'greedy':
+            # write the features to the device in use
             image_input = image_input.to(self.device)
+            # generate a sentence - obtains the IDs of the words
             sample_ids = self.model.generate_sentence(image_input, self.evaluator.start_word,
                                                       self.evaluator.end_word, labels, labels_onehot=None,
                                                       max_sampling_length=50, sample=False)
         else:
             raise Exception("not implemented")
 
+        # if only one ID was passed, we have a 1-dimensional tensor which sentence_decode can't handle
         if len(sample_ids.shape) == 1:
+            # make the sample_ids 2-dimensional
             sample_ids = sample_ids.unsqueeze(0)
 
         return self.sentence_decode(sample_ids)
+
 
     def greedy_pragmatic_speaker(self, img_id, question_id, rationality,
                                  speaker_prior, entropy_penalty_alpha,
@@ -911,6 +940,7 @@ class IncRSA(RSA):
             -   max_sampling_length: integer for maximum length of the caption
             -   sample: whether we will decode greedily or sample from predicted distribution
             -   return_diagnostic: whether we wish to obtain intermediate values from the RSA computation
+
         _____
         Returns:
             -   decoded captions for the images
@@ -921,6 +951,7 @@ class IncRSA(RSA):
         # image features and class labels
         image_input, labels = self.rsa_dataset.get_batch(image_id_list)
         image_inputs = image_input.to(self.device)
+
 
         # set start and end words
         start_word = self.evaluator.start_word
@@ -1457,4 +1488,5 @@ if __name__ == '__main__':
     incr = IncRSA(model, rsa_dataset)
     # print(incr.sentence_decode([torch.tensor([400, 60]), torch.tensor([1]), torch.tensor([2])]))
     #print(incr.semantic_speaker(['003.Sooty_Albatross/Sooty_Albatross_0075_796352.jpg', '007.Parakeet_Auklet/Parakeet_Auklet_0047_795956.jpg']))
-    incr.greedy_pragmatic_speaker(['007.Parakeet_Auklet/Parakeet_Auklet_0047_795956.jpg'], 4, 0.5, 4, 0.4)
+    print(incr.semantic_speaker(['003.Sooty_Albatross/Sooty_Albatross_0075_796352.jpg']))
+
