@@ -846,26 +846,26 @@ class IncRSA(RSA):
 
     # def semantic_speaker_from_features(self, image_input, labels):
     #     image_input = image_input.to(self.device)
-    # 
+    #
     #     sample_ids = self.model.generate_sentence(image_input, self.evaluator.start_word,
     #                                               self.evaluator.end_word, labels, labels_onehot=None,
     #                                               max_sampling_length=50, sample=False)
-    # 
+    #
     #     # if only one ID was passed, we have a 1-dimensional tensor which sentence_decode can't handle
     #     if len(sample_ids.shape) == 1:
     #         # make the sample_ids 2-dimensional
     #         sample_ids = sample_ids.unsqueeze(0)
-    # 
+    #
     #     return self.sentence_decode(sample_ids)
 
-    def semantic_speaker(self, image_id_list, decode_strategy="greedy", image_input=None, labels=None):
+    def semantic_speaker(self, image_id_list=[], decode_strategy="greedy", image_input=None, labels=None):
         """
         Parameters:
             -   image_id_list: list of image IDs to get the captions of
             -   decode_strategy: can only be greedy in the current implementation
         """
         # image_id here is a string!
-        
+
         if image_input is None and labels is None:
             # get the image features and their labels
             image_input, labels = self.rsa_dataset.get_batch(image_id_list)
