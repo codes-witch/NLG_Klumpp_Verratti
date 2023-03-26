@@ -158,13 +158,13 @@ class CUBPartitionDataset(object):
 
     def get_valid_issues(self, img_id):
         """
-        Parameter:
-        img_id: a string with the name of the image file. E.g. '144.Common_Tern/Common_Tern_0108_149672.jpg'
+        Parameters:
+            - img_id: a string with the name of the image file. E.g. '144.Common_Tern/Common_Tern_0108_149672.jpg'
 
         Returns a tuple (list, list).
-        -   tuple[0] is a list of ints representing the issue IDs of the issues that are resolvable for the given image
-        ID
-        -   tuple[1] is a list of strings with the labels (names) of the resolvable issues for the given image ID
+            -   tuple[0] is a list of ints representing the issue IDs of the issues that are resolvable for the given image
+            ID
+            -   tuple[1] is a list of strings with the labels (names) of the resolvable issues for the given image ID
         """
 
         # Get the row corresponding to the image ID from the matrix
@@ -189,7 +189,7 @@ class CUBPartitionDataset(object):
 
 
 def generate_caption_for_test(save_file_prefix, max_cap_per_cell=40, rationality=20, entropy_penalty_alpha=0.4,
-                              no_retry=False, no_similar=False):
+                              no_retry=False, no_similar=False, s_avg=False):
 
     """
     Generates pragmatic speaker captions for the images of the test set. Generates Json files with dictionaries
@@ -213,7 +213,7 @@ def generate_caption_for_test(save_file_prefix, max_cap_per_cell=40, rationality
 
     # Get all image IDs for the test set
     test_ids = []
-    with open(pjoin(cub_partition.image_folder, 'test.txt')) as f:
+    with open(pjoin(cub_partition.image_folder, 'test_small.txt')) as f:
         for line in f:
             test_ids.append(line.strip())
 
@@ -242,14 +242,25 @@ def generate_caption_for_test(save_file_prefix, max_cap_per_cell=40, rationality
             if no_similar:
                 sim_cell2 = []
 
-            # Get the caption for current issue for current image. This handles all types of pragmatic speaker:
-            # S1 is generated when no_similar = True (information of whether i is in the same cell as i' is irrelevant)
-            # S1_C is generated if no_similar = False and entropy_penalty_alpha is 0 (U_1 * 1 + U_2 * 0 = U_1)
-            # S1_C+H is generated if no_similar = False and entropy_penalty_alpha is different from 0
-            cap = rsa_model.greedy_pragmatic_speaker_free(
-                    [imgid] + sim_cell2 + dis_cell2,
-                    num_sim=len(sim_cell2), rationality=rationality,
-                    speaker_prior=True, entropy_penalty_alpha=entropy_penalty_alpha)[0]
+            # OWN CODE!
+            if s_avg: # average all features of similar images and call semantic speaker with the result
+                img_features, labels = rsa_dataset.get_batch(sim_cell2)
+                _, label = rsa_dataset.get_batch([imgid])
+                avg = img_features.mean(dim=0, keepdim=True)
+
+                print(avg)
+
+                cap = rsa_model.semantic_speaker(image_input=avg, labels=label)[0]
+
+            else:
+                # Get the caption for current issue for current image. This handles all types of pragmatic speaker:
+                # S1 is generated when no_similar = True (information of whether i is in the same cell as i' is irrelevant)
+                # S1_C is generated if no_similar = False and entropy_penalty_alpha is 0 (U_1 * 1 + U_2 * 0 = U_1)
+                # S1_C+H is generated if no_similar = False and entropy_penalty_alpha is different from 0
+                cap = rsa_model.greedy_pragmatic_speaker_free(
+                        [imgid] + sim_cell2 + dis_cell2,
+                        num_sim=len(sim_cell2), rationality=rationality,
+                        speaker_prior=True, entropy_penalty_alpha=entropy_penalty_alpha)[0]
 
             # Save caption and partition in corresponding dictionaries
             img_id_to_caption[imgid][issue_id] = cap
@@ -318,59 +329,65 @@ if __name__ == '__main__':
     # the code below it. The rationality has been hardcoded to be the one used in the paper, but it can easily be
     # changed
 
-    # os.makedirs(pjoin(args.root_dir, "random_run_{}".format(time), "test.txt"), exist_ok=True)
-    # save_dir = pjoin(args.root_dir, "random_run_{}".format(time))
+    time = args.exp_num
+
+    os.makedirs(pjoin(args.root_dir, "random_run_{}".format(time), "test.txt"), exist_ok=True)
+    save_dir = pjoin(args.root_dir, "random_run_{}".format(time))
+
+    if args.exp_num == 0:
+        generate_literal_caption_for_test(save_dir + "/S0")
+
+    if args.exp_num == 1:
+        generate_caption_for_test(save_dir + "/S1", max_cap_per_cell=args.max_cell_size,
+                                  rationality=3,
+                                  entropy_penalty_alpha=0, no_similar=True)
+    if args.exp_num == 2:
+        generate_caption_for_test(save_dir + "/S1_Q", max_cap_per_cell=args.max_cell_size,
+                                  rationality=10,
+                                  entropy_penalty_alpha=0)
+
+    if args.exp_num == 3:
+        generate_caption_for_test(save_dir + "/S1_QH", max_cap_per_cell=args.max_cell_size,
+                                  rationality=10,
+                                  entropy_penalty_alpha=args.entropy)
+
+    if args.exp_num == 4:
+        generate_caption_for_test(save_dir + "/S0_AVG", s_avg=True)
     #
-    # if args.exp_num == 0:
-    #     generate_literal_caption_for_test(save_dir + "/S0")
+    # for time in range(args.run_time):
     #
-    # if args.exp_num == 1:
-    #     generate_caption_for_test(save_dir + "/S1", max_cap_per_cell=args.max_cell_size,
-    #                               rationality=3,
-    #                               entropy_penalty_alpha=0, no_similar=True)
-    # if args.exp_num == 2:
-    #     generate_caption_for_test(save_dir + "/S1_Q", max_cap_per_cell=args.max_cell_size,
-    #                               rationality=10,
-    #                               entropy_penalty_alpha=0)
+    #     args.exp_num = time
     #
-    # if args.exp_num == 3:
-    #     generate_caption_for_test(save_dir + "/S1_QH", max_cap_per_cell=args.max_cell_size,
-    #                               rationality=10,
-    #                               entropy_penalty_alpha=args.entropy)
-
-    for time in range(args.run_time):
-
-        args.exp_num = time
-
-        # Create the directory for this run
-        os.makedirs(pjoin(args.root_dir, "random_run_{}".format(time), "test.txt"), exist_ok=True)
-
-        save_dir = pjoin(args.root_dir, "random_run_{}".format(time))
-
-        # Generate literal speaker captions
-        if args.exp_num == 0:
-            generate_literal_caption_for_test(save_dir + "/S0")
-
-        # Generate pragmatic speaker captions (insensitive to issues)
-        if args.exp_num == 1:
-            # manually set rationality to replicate paper
-            args.rationality = 3
-            generate_caption_for_test(save_dir + "/S1", max_cap_per_cell=args.max_cell_size,
-                                              rationality=args.rationality,
-                                              entropy_penalty_alpha=0, no_similar=True)
-
-        # Generate issue-sensitive pragmatic speaker captions (S1_C)
-        if args.exp_num == 2:
-            # manually set rationality to replicate paper
-            args.rationality = 10
-            generate_caption_for_test(save_dir + "/S1_C", max_cap_per_cell=args.max_cell_size,
-                                      rationality=args.rationality,
-                                      entropy_penalty_alpha=0)
-
-        # Generate issue-sensitive pragmatic speaker captions with penalization for misleading captions (S1_C+H)
-        if args.exp_num == 3:
-            # manually set rationality to replicate paper
-            args.rationality = 10
-            generate_caption_for_test(save_dir + "/S1_QH", max_cap_per_cell=args.max_cell_size,
-                                      rationality=args.rationality,
-                                      entropy_penalty_alpha=args.entropy)
+    #     # Create the directory for this run
+    #     os.makedirs(pjoin(args.root_dir, "random_run_{}".format(time), "test.txt"), exist_ok=True)
+    #
+    #     save_dir = pjoin(args.root_dir, "random_run_{}".format(time))
+    #
+    #     # Generate literal speaker captions
+    #     if args.exp_num == 0:
+    #         generate_literal_caption_for_test(save_dir + "/S0")
+    #
+    #     # Generate pragmatic speaker captions (insensitive to issues)
+    #     if args.exp_num == 1:
+    #         # manually set rationality to replicate paper
+    #         args.rationality = 3
+    #         generate_caption_for_test(save_dir + "/S1", max_cap_per_cell=args.max_cell_size,
+    #                                           rationality=args.rationality,
+    #                                           entropy_penalty_alpha=0, no_similar=True)
+    #
+    #     # Generate issue-sensitive pragmatic speaker captions (S1_C)
+    #     if args.exp_num == 2:
+    #         # manually set rationality to replicate paper
+    #         args.rationality = 10
+    #         generate_caption_for_test(save_dir + "/S1_C", max_cap_per_cell=args.max_cell_size,
+    #                                   rationality=args.rationality,
+    #                                   entropy_penalty_alpha=0)
+    #
+    #     # Generate issue-sensitive pragmatic speaker captions with penalization for misleading captions (S1_C+H)
+    #     if args.exp_num == 3:
+    #         # manually set rationality to replicate paper
+    #         args.rationality = 10
+    #         generate_caption_for_test(save_dir + "/S1_QH", max_cap_per_cell=args.max_cell_size,
+    #                                   rationality=args.rationality,
+    #                                   entropy_penalty_alpha=args.entropy)
+    #
