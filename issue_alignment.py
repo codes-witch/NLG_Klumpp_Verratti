@@ -73,4 +73,4 @@ if __name__ == '__main__':
     for s, s_name in zip([s0, s1, s1c, s1ch], ["S0", "S1", "S1_C", "S1_CH"]):
         print(s_name)
         print("Precision: " + str(s[0]))
-        print("Recall, strict: " + str(s[1]))
+        print("Recall: " + str(s[1]))
