@@ -60,14 +60,15 @@ def evaluate_captions(path):
 
     precision = sum_true_pos / (sum_true_pos + sum_false_pos)
     recall = sum_true_pos / (sum_true_pos + sum_false_neg)
+    f1_score = 2*sum_true_pos / (2*sum_true_pos + sum_false_pos + sum_false_neg)
 
-    # return a tuple (precision, recall)
-    return precision, recall
+    # return a tuple (precision, recall, F1 score)
+    return precision, recall, f1_score
 
 
 # alternative evaluation method
-# here, image-issue pairs are not weighted equally, but instead, precision and recall are calculated for each image 
-# and then averaged
+# here, image-issue pairs are not weighted equally, but instead, precision, recall, and F1 score are calculated 
+# for each image and then averaged
 def evaluate_captions_by_image(path):
 
     # instantiate the keyword classifier
@@ -85,7 +86,8 @@ def evaluate_captions_by_image(path):
     sum_false_pos = 0  # number of other issues that are addressed
     precisions = [] # list of precisions for each image
     recalls = [] # list of recalls for each image
-    
+    f1_scores = [] # list of F1 scores for each image
+
     # load captions
     with open(path) as input_file:
         captions = json.loads(input_file.read())
@@ -114,21 +116,24 @@ def evaluate_captions_by_image(path):
                     if kc.classify_parts_aspect(other_part, other_aspect, cap, tokenize=True):
                         sum_false_pos += 1
 
-        # if there is at least one resolvable issue for the image, calculate precision and recall
+        # if there is at least one resolvable issue for the image, calculate precision, recall, and F1 score
         if len(captions[img])>0:
             precisions.append(sum_true_pos/(sum_true_pos+sum_false_pos))
             recalls.append(sum_true_pos/(sum_true_pos+sum_false_neg))
+            f1_scores.append(2 * sum_true_pos / (2 * sum_true_pos + sum_false_pos + sum_false_neg))
+
         # set all sums back to 0
         sum_true_pos=0
         sum_false_neg=0
         sum_false_pos=0
+    
+    # overall precision, recall, and F1 score are the average of the scores values for individual images
+    precision = sum(precisions) / len(precisions)
+    recall = sum(recalls) / len(recalls)
+    f1_score = sum(f1_scores) / len(f1_scores)
 
-    # overall precision and recall are the average of the scores values for individual images
-    precision = sum(precisions)/len(precisions)
-    recall = sum(recalls)/len(recalls)
-
-    # return a tuple (precision, recall)
-    return precision, recall
+    # return a tuple (precision, recall, F1 score)
+    return precision, recall, f1_score
 
 
 if __name__ == '__main__':
@@ -146,3 +151,4 @@ if __name__ == '__main__':
         print(s_name)
         print("Precision: " + str(s[0]))
         print("Recall: " + str(s[1]))
+        print("F1 Score: " + str(s[2]))
