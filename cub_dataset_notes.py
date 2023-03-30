@@ -56,8 +56,8 @@ class CubDataset(CocoDataset):
             self.load_img_features(self.img_features_path)
             # NOTE TODO: what is the following line doing?
             self.input_size = next(iter(self.img_features.values())).shape[0]
-
-
+        
+            
     # NOTE: this just loads the image features into a dictionary
     # NOTE TODO: the feature dictionary pairs images with vectors/tensors of several thousand numbers (probably between
     # -1 and 1). It would be good to mention what this represents (I suppose an image embedding, but I am not sure)
@@ -66,6 +66,7 @@ class CubDataset(CocoDataset):
             feature_dict = pickle.load(f, encoding='latin1')
         self.img_features = feature_dict
 
+    """
     # NOTE: this loads the class labels into a dictionary
     # NOTE TODO: where is this used?
     def load_class_labels(self, class_labels_path):
@@ -90,3 +91,4 @@ class CubDataset(CocoDataset):
     def get_class_label(self, img_id):
         class_label = torch.LongTensor([int(self.class_labels[img_id])-1])
         return class_label
+    """
