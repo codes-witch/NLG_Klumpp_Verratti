@@ -112,8 +112,9 @@ class CocoDataset(data.Dataset):
         self.vocab = vocab
         self.tokens = tokenized_captions
         self.transform = transform
-
+    """
     # NOTE TODO: Is this used, and if so, where?
+    # EDIT: this is used in model_loader.py, gve(), but I don't know where we need that either
     def set_label_usage(self, return_labels):
         if return_labels and not hasattr(self, 'class_labels'):
             self.load_class_labels(self.labels_path)
@@ -209,11 +210,11 @@ class CocoDataset(data.Dataset):
             return image, target, base_id, class_label
         else:
             return image, target, base_id
-
+    """
 
     def __len__(self):
         return len(self.ids)
-
+    """
     # NOTE TODO: Is this used, and if so, where?
     def eval(self, captions, checkpoint_path, score_metric='CIDEr'):
         # TODO: Make strings variables
@@ -282,7 +283,7 @@ class CocoDataset(data.Dataset):
         """
         t = PTBTokenizer()
         return t.tokenize_caption(caption)
-
+    """
 
     @classmethod
     def build_tokenized_captions(cls, json):
