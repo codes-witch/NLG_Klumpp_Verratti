@@ -118,12 +118,12 @@ class LRCN(nn.Module):
         return outputs
 
 	# TODO where is this uses? not in this file, it seems
-    def state_dict(self, *args, full_dict=False, **kwargs):
-        state_dict = super().state_dict(*args, **kwargs)
-        if self.has_vision_model and not full_dict:
-            for key in self.vision_model.state_dict().keys():
-                del state_dict['vision_model.{}'.format(key)]
-        return state_dict
+#    def state_dict(self, *args, full_dict=False, **kwargs):
+#        state_dict = super().state_dict(*args, **kwargs)
+#        if self.has_vision_model and not full_dict:
+#            for key in self.vision_model.state_dict().keys():
+#                del state_dict['vision_model.{}'.format(key)]
+#        return state_dict
 
 	# Sample from the distribution 'logits'
     def sample(self, logits):
