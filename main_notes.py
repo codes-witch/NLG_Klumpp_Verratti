@@ -71,7 +71,7 @@ if __name__ == '__main__':
     model = getattr(ml, args.model)()
     print(model, '\n')
 
-    # TODO: Remove and handle with checkpoints
+    # If we are not training, get the weights and training states from the checkpoint
     if not args.train:
         print("Loading Model Weights ...")
         evaluation_state_dict = torch.load(args.eval_ckpt)
@@ -83,11 +83,7 @@ if __name__ == '__main__':
     if args.train:
         val_dataset.set_label_usage(dataset.return_labels)
 
-    # NOTE AND TODO: I have not yet understood what the logger does since I've not
-    # found a way to open its files yet (I didn't search for it particularly extensively either though);
-    # however, it seems to do some sort of documentation of the process
-
-    # Create logger
+    # Create logger. tensorboard --logdir=path/to/logs allows us to visualize batch and epoch loss
     logger = Logger(os.path.join(job_path, 'logs'))
 
     # NOTE AND TODO: No comment on the following section yet
@@ -106,7 +102,8 @@ if __name__ == '__main__':
         print("Evaluating ...")
         vars(args)['num_epochs'] = 1
 
-    # NOTE: The following loop goes throught the specified number of epochs, either training and evaluating or only evaluating
+    # NOTE: The following loop goes throught the specified number of epochs, either training and evaluating or only
+    # evaluating
 
     # Start training/evaluation
     max_score = 0
@@ -119,7 +116,8 @@ if __name__ == '__main__':
             checkpoint_name = "ckpt-e{}".format(trainer.curr_epoch)
             checkpoint_path = os.path.join(job_path, checkpoint_name)
 
-            # NOTE: the model is set to evaluation mode with .eval(), then it is evaluated, and then set back to training settings with .train()
+            # NOTE: the model is set to evaluation mode with .eval(), then it is evaluated, and then set back to
+            # training settings with .train()
             model.eval()
             result = evaluator.train_epoch()
             if evaluator.REQ_EVAL:
@@ -129,7 +127,6 @@ if __name__ == '__main__':
             model.train()
 
             # NOTE: write to log
-
             logger.scalar_summary('score', score, trainer.curr_epoch)
 
             # NOTE AND TODO: The checkpoints do not work for me. There are two possibilities:
@@ -147,6 +144,7 @@ if __name__ == '__main__':
             torch.save(model.state_dict(), checkpoint_path)
             torch.save(checkpoint, os.path.join(job_path,
                 "training_checkpoint.pth"))
+            # Check whether this is the best score we have obtained so far. If so, save as such
             if score > max_score:
                 max_score = score
                 link_name = "best-ckpt.pth"
@@ -174,6 +172,7 @@ if __name__ == '__main__':
 
     # NOTE AND TODO: What does 'sc' mean here? Is it another kind of model? Why is it relevant here?
 
+    # If what we are testing/validating is the SentenceClassifier, save results in a JSON file #TODO I am unsure
     if not args.train and args.model == 'sc':
         with open('results.json', 'w') as f:
             json.dump(result, f)
