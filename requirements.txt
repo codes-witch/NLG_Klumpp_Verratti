@@ -1,3 +1,10 @@
-tqdm
+tqdm~=4.65.0
 nltk
 sklearn
+numpy~=1.16.4
+torchvision~=0.3.0
+pillow~=6.1.0
+pycocotools~=2.0.0
+pycocoevalcap~=1.2
+matplotlib~=3.1.0
+scipy~=1.5.2

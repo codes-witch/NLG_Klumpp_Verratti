@@ -121,7 +121,6 @@ class CocoDataset(data.Dataset):
             self.load_class_labels(self.labels_path)
         self.return_labels = return_labels
 
-    """
 
     # NOTE TODO: Is this used, and if so, where?
     def load_class_labels(self, category_path, use_supercategories=False):
@@ -172,13 +171,14 @@ class CocoDataset(data.Dataset):
     # NOTE TODO: Where is this used?
     def get_class_label(self, img_id):
         img_labels = self.class_labels[img_id]
+        print("IMAGE LABELS", img_labels)
         rand_idx = np.random.randint(len(img_labels))
         class_label = torch.LongTensor([int(img_labels[rand_idx])])
         return class_label
 
     # NOTE TODO: Where is this used?
     def __getitem__(self, index):
-        """"""Returns one data pair (image and caption).""""""
+        """Returns one data pair (image and caption)."""
         coco = self.coco
         vocab = self.vocab
         base_id = self.ids[index]
@@ -200,11 +200,11 @@ class CocoDataset(data.Dataset):
         tokens = self.tokens[ann_id]
         image = self.get_image(img_id)
 
-        """
 
-    """# Convert caption (string) to word ids.
-        tokens = CocoDataset.tokenize(caption)"""
-    """
+        # THIS WAS ALREADY COMMENTED OUT
+        # # Convert caption (string) to word ids.
+        # tokens = CocoDataset.tokenize(caption)
+        #
         caption = []
         caption.append(vocab(vocab.start_token))
         caption.extend([vocab(token) for token in tokens])
@@ -214,11 +214,11 @@ class CocoDataset(data.Dataset):
             return image, target, base_id, class_label
         else:
             return image, target, base_id
-    """
+
 
     def __len__(self):
         return len(self.ids)
-    """
+
     # NOTE TODO: Is this used, and if so, where?
     def eval(self, captions, checkpoint_path, score_metric='CIDEr'):
         # TODO: Make strings variables
@@ -235,7 +235,7 @@ class CocoDataset(data.Dataset):
         return cocoEval.eval[score_metric]
 
     # NOTE TODO: It seems the following method is never used -> check whether that really is the case and (if so) remove it
-    """
+
     @staticmethod
     def collate_fn(data):
         """Creates mini-batch tensors from the list of tuples (image, caption).
@@ -251,7 +251,7 @@ class CocoDataset(data.Dataset):
             targets: torch tensor of shape (batch_size, padded_length).
             lengths: list; valid length for each padded caption."""
 
-        
+
         # Sort a data list by caption length (descending order).
         data.sort(key=lambda x: len(x[1]), reverse=True)
         images, captions, ids, *labels = zip(*data)
@@ -327,10 +327,10 @@ class CocoDataset(data.Dataset):
         counter = Counter()
         ids = coco.anns.keys()
         for i, id in enumerate(ids):
-            """
+
             caption = str(coco.anns[id]['caption'])
             tokens = CocoDataset.tokenize(caption)
-            """
+
             tokens = tokenized_captions[id]
             counter.update(tokens)
 
