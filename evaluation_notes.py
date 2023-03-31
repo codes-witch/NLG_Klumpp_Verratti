@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 from PIL import Image
 
 from rsa_eval import load_inc_rsa_model
-from rsa import BirdDistractorDataset
+from rsa_notes import BirdDistractorDataset
 
 def get_args(argstring=None, verbose=False):
     """
