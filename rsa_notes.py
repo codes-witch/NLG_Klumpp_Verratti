@@ -6,14 +6,13 @@ import torch.nn.functional as F
 from os.path import join as pjoin
 from tqdm import tqdm
 
-from models.model_loader import ModelLoader
-from utils.data.data_prep import DataPreparation
+from models.model_loader_reduced import ModelLoader
+from utils.data.data_prep_notes import DataPreparation
 from train.trainer_loader import TrainerLoader
 import utils.arg_parser
 
 from torch.distributions import Categorical
 
-from rsa_utils import logsumexp
 import numpy as np
 import pickle
 
@@ -21,6 +20,38 @@ from scipy.stats import entropy
 
 import matplotlib
 import matplotlib.pyplot as plt
+
+def logsumexp(inputs, dim=None, keepdim=False):
+    """
+    Our comments:
+
+    Logsumexp is used to avoid underflow. We are working in log-space. Here we will use this fucntion for
+    the normalization constant. These constants are normally in the denominator, but because we are in log-space, we
+    subtract
+
+    Original comments:
+
+    Numerically stable logsumexp.
+
+    Args:
+        inputs: A Variable with any shape.
+        dim: An integer.
+        keepdim: A boolean.
+
+    Returns:
+        Equivalent of log(sum(exp(inputs), dim=dim, keepdim=keepdim)).
+    """
+    # For a 1-D array x (any array along a single dimension),
+    # log sum exp(x) = s + log sum exp(x - s)
+    # with s = max(x) being a common choice.
+    if dim is None:
+        inputs = inputs.view(-1)
+        dim = 0
+    s, _ = torch.max(inputs, dim=dim, keepdim=True)
+    outputs = s + (inputs - s).exp().sum(dim=dim, keepdim=True).log()
+    if not keepdim:
+        outputs = outputs.squeeze(dim)
+    return outputs
 
 def get_args(argstring=None, verbose=True):
     """
@@ -373,7 +404,12 @@ class BirdDistractorDataset(object):
 
     def get_top_k_from_cell(self, cell, max_cap_per_cell, cell_select_strategy=None):
         """
-        TODO idk what exactly this is for
+        Get the first max_cap_per_cell from a cell (list)
+
+        Parameters:
+            -   cell: a list of image_ids with a given attribute in common
+            -   max_cap_per_cell: a number of images that will be taken from the cell
+            -   cell_select_strategy: 'random' or None
         """
         # If the select strategy is not random, simply get the first k from the cell
         if cell_select_strategy == None:
@@ -485,7 +521,7 @@ class BirdDistractorDataset(object):
         """
         Load class labels
 
-        Parameter:
+        Parameters:
             -   class_label_path: path to a pickled dictionary mapping image IDs (filenames) to class
         """
         # get mapping from filenames to classes (in our case, bird species)
@@ -571,7 +607,7 @@ class BirdDistractorDataset(object):
         return tokens
 
     def get_captions_for_attribute(self, attr_ids, limit=5, print_ready=True):
-        # TODO not used
+        # TODO not used?
 
         # ORIGINAL COMMENTS
         # attr_id: needs to be the "binary" attribute ID
@@ -654,18 +690,24 @@ class BirdDistractorDataset(object):
 
 def load_model(rsa_dataset, verbose=True):
 
+    """
+    Loads a model given the dataset, which contains information about the model to be loaded (args)
+    """
     print("Loading Model ...")
+    # Pass the arguments of rsa_dataset and the training data
     ml = ModelLoader(rsa_dataset.args, rsa_dataset.split_to_data['train'])
     model = getattr(ml, rsa_dataset.args.model)()
     if verbose:
         print(model, '\n')
         print("Loading Model Weights...")
 
+    # If there is CUDA available, use it, else, CPU
     if torch.cuda.is_available():
         evaluation_state_dict = torch.load(rsa_dataset.args.eval_ckpt)
     else:
         evaluation_state_dict = torch.load(rsa_dataset.args.eval_ckpt, map_location='cpu')
 
+    # Load the state_dict, update it with the checkpoint, put the model in eval() mode
     model_dict = model.state_dict(full_dict=True)
     model_dict.update(evaluation_state_dict)
     model.load_state_dict(model_dict)
@@ -704,7 +746,7 @@ class RSA(object):
         :return: We put orig_logprob as the FIRST row
                 [num_distractors+1 , n_sample]
 
-        TODO this has no usages
+        TODO this has no usages?
         """
         return torch.cat([orig_logprob.unsqueeze(0), distractor_logprob], dim=0)
 
@@ -724,11 +766,12 @@ class RSA(object):
         :return:
                A re-weighted matrix [I, C/Vocab]
 
-        TODO has no usages. All comments are ORIGINAL
+        TODO has no usages? All comments are ORIGINAL
         """
 
-        # step 2
+        # S0 is the literal matrix. No pragmatic knowledge
         s0 = literal_matrix.clone()
+
         norm_const = logsumexp(literal_matrix, dim=0, keepdim=True)
         l1 = literal_matrix.clone() - norm_const
         # step 3
@@ -765,53 +808,70 @@ class RSA(object):
     def compute_pragmatic_speaker_w_similarity(self, literal_matrix, num_similar_images,
                                                rationality=1.0, speaker_prior=False, lm_logprobsf=None,
                                                entropy_penalty_alpha=0.0, return_diagnostics=False):
+        """
+        Parameters:
+            -   literal_matrix: matrix for the literal speaker
+            -   The number of images in the same cell
+            -   rationality: RSA rationality hyperparameter (in the paper, alpha)
+            -   speaker_prior: whether there is a non-flat prior over images
+
+        """
 
         # The literal matrix contains the probabilities of S_0 for the next word.
         s0_mat = literal_matrix
-        # TODO why do we take the index at 0?
-        # TODO I think this gets the target image?
+        # This is used as the image prior if speaker_prior is True
         prior = s0_mat.clone()[0]
 
         # since all the calculations are happening in log-space, this is the same as dividing S_0(w|i) by the
         # normalizing factor (represented here by logsumexp)
-        # TODO there should be multiplication by the prior (or addition in log-space), both in S0_mat and in logsumexp.
-        #  Where is it?
         l1_mat = s0_mat - logsumexp(s0_mat, dim=0, keepdim=True)
-
-
+        # The probability matrix for images in the same cell. Normalized.
         same_cell_prob_mat = l1_mat[:num_similar_images + 1] - logsumexp(l1_mat[:num_similar_images + 1], dim=0)
         l1_qud_mat = same_cell_prob_mat.clone()
 
-        entropy = self.compute_entropy(same_cell_prob_mat, 0, keepdim=True)  # (1, |V|)
+        # In the paper, the equivalent is H(L1(i' | w) * d[C(i) = C(i')]) where d[C(i) = C(i')]] is 1
+        # if i and i' are in the same cell
+        entropy = self.compute_entropy(same_cell_prob_mat, 0, keepdim=True)  # Original comment: (1, |V|)
 
         utility_2 = entropy
 
-        utility_1 = logsumexp(l1_mat[:num_similar_images + 1], dim=0, keepdim=True)  # [1, |V|]
+        utility_1 = logsumexp(l1_mat[:num_similar_images + 1], dim=0, keepdim=True)  # Original comment [1, |V|]
 
+        # weighing utility functions with entropy_penalty_alpha (in the paper, beta)
         utility = (1 - entropy_penalty_alpha) * utility_1 + entropy_penalty_alpha * utility_2
 
         s1 = utility * rationality
 
         # apply rationality
         if speaker_prior:
+            # multiplication is summation in log-space. Here the prior is added (if it is not flat).
+            # Otherwise, if is flat, so we get the logprob directly from lm_logprobsf
             if lm_logprobsf is None:
                 s1 += prior
             else:
-                s1 += lm_logprobsf[0]  # lm rows are all the same  # here is two rows summation
+                s1 += lm_logprobsf[0]
 
         if return_diagnostics:
+            # If return_diagnostics, we should return intermediate calculations
+
             # ORIGINAL COMMENTS:
-            # We return RSA-terms only; on the oustide (Debugger), we re-assemble for snapshots of computational process
+            # We return RSA-terms only; on the outside (Debugger), we re-assemble for snapshots of computational process
             # s0, L1, u1, L1*, u2, u1+u2, s1
             # mat, vec, vec, mat, vec, vec, vec
             return s0_mat, l1_mat, utility_1, l1_qud_mat, entropy, utility_2, utility, s1 - logsumexp(s1, dim=1,
                                                                                                       keepdim=True)
-
+        # Normalize one last time and return pragmatic speaker
         return s1 - logsumexp(s1, dim=1, keepdim=True)
 
 
 class IncRSA(RSA):
+    """
+    Class extending RSA
+    """
     def __init__(self, model, rsa_dataset, lm_model=None):
+        """
+        Sets
+        """
         super().__init__()
         self.model = model
         self.rsa_dataset = rsa_dataset
@@ -927,10 +987,11 @@ class IncRSA(RSA):
                                       speaker_prior, entropy_penalty_alpha, lm_logprobsf=None,
                                       max_sampling_length=50, sample=False, return_diagnostic=False):
         """
-        ORIGINAL COMMENTS:
+        ORIGINAL COMMENTS: {
             We always assume image_id_list[0] is the target image
             image_id_list[:num_sim] are the within cell
             image_id_list[num_sim:] are the distractors
+        }
 
         Parameters
             -   image_id_list: a list of image IDs where the first one is the target and the rest are similar or dissimilar
@@ -993,7 +1054,7 @@ class IncRSA(RSA):
         i = 0
         while not reached_end.all() and i < max_sampling_length:
             # we get the loop started with the embedding of the start word. For further iterations it will be the
-            # previous predicted word
+            # previously predicted word
             lstm1_input = embedded_word
 
             # First LSTM pass
@@ -1014,7 +1075,7 @@ class IncRSA(RSA):
             literal_matrix = log_probs
 
             # If we don't need the diagnostics, simply get the pragmatic speaker's predictions. Otherwise, get the
-            # diagnostics information too
+            # diagnostic information too
             if not return_diagnostic:
                 pragmatic_array = self.compute_pragmatic_speaker_w_similarity(literal_matrix, num_sim,
                                                                               rationality=rationality,
@@ -1041,9 +1102,11 @@ class IncRSA(RSA):
             # pragmatic array becomes the computational output,
             # but we need to repeat it for all
             # beam search / diverse beam search this part is easier to handle.
-            outputs = pragmatic_array.expand(len(image_id_list), -1)  # expand along batch dimension
+
+            outputs = pragmatic_array.expand(len(image_id_list), -1)  # OUR COMMENT: expand along batch dimension
             # ORIGINAL COMMENT: rsa augmentation ends
 
+            # FROM NOW ON, OUR COMMENTS
             # if sample, we sample to predict. Otherwise, we just get the most probable next word (greedy)
             if sample:
                 predicted, log_p = self.sample(outputs)
