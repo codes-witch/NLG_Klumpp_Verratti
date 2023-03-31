@@ -12,7 +12,7 @@ from pycocotools.coco import COCO
 from pycocoevalcap.eval import COCOEvalCap
 # import nltk
 
-from utils.vocabulary import Vocabulary
+from utils.vocabulary_notes import Vocabulary
 from utils.tokenizer.ptbtokenizer import PTBTokenizer
 
 from .coco_dataset_notes import CocoDataset
