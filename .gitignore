@@ -1,0 +1,4 @@
+data/coco
+data/cub
+checkpoints/
+!checkpoints/gve-cub-D2020-03-14-T18-04-04-G0-best-ckpt.pth

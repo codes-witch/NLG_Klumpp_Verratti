@@ -4,9 +4,9 @@ import json
 
 import sys 
 
-from models.model_loader import ModelLoader
+from models.model_loader_reduced import ModelLoader
 from train.trainer_loader import TrainerLoader
-from utils.data.data_prep import DataPreparation
+from utils.data.data_prep_notes import DataPreparation
 import utils.arg_parser
 from utils.logger import Logger
 from utils.misc import get_split_str
