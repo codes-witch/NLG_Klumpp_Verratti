@@ -144,7 +144,6 @@ class LRCN(nn.Module):
 
     def generate_sentence(self, image_inputs, start_word, end_word, states=(None, None),
                           max_sampling_length=50, sample=False, feat_func=None):
-        print("NOW IN GENERATE SENTENCE")
 
         # set the featured function to default if none is explicitly given
         if feat_func is None:
@@ -157,12 +156,10 @@ class LRCN(nn.Module):
         else:
             image_features = image_inputs
         # the image features are first passed through the linear layer
-        print("linear1")
         image_features = self.linear1(image_features)
         # apply rectified linear unit function (a function that "cuts off" everything where x<=0)
         image_features = F.relu(image_features)
         # apply the featured function specified above
-        print("feat_func")
         image_features = feat_func(image_features)
         image_features = image_features.unsqueeze(1)
 
@@ -184,7 +181,6 @@ class LRCN(nn.Module):
         # generate words until the end word has been reached
         while not reached_end.all() and i < max_sampling_length:
             # the input is the previous word as an embedding
-            print(i, "LSTM1")
             lstm1_input = embedded_word
 
             # pass through the first lstm layer
