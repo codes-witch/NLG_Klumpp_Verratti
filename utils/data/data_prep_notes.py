@@ -23,6 +23,8 @@ class DataPreparation:
             tokens=None):
 
         # NOTE TODO: what do you think the next line (get_transform) does?
+        # NOTE TODO answer: I think it takes the images (literally, as the array of pixels) and then transforms it into
+        #  tensors
         transform = get_transform(vision_model, split)
         dataset = self.DatasetClass(root=self.data_path,
                                     split=split,

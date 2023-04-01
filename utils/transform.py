@@ -1,7 +1,10 @@
 import torchvision.transforms as transforms
 
 def get_transform(net, train=True):
-
+    """
+    Defines transformation pipeline for the image so that it can be presented in tensor form. Finally, the tensor is
+    normalized
+    """
     if net is None:
         transform = None
     elif net.startswith('vgg'):
@@ -27,6 +30,7 @@ def get_transform(net, train=True):
 
 # Credits: https://discuss.pytorch.org/t/simple-way-to-inverse-transform-normalization/4821/3
 class UnNormalize(object):
+    # TODO is this ever used?
     def __init__(self, mean, std):
         self.mean = mean
         self.std = std
