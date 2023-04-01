@@ -8,7 +8,8 @@ from torch.distributions import Categorical
 from .pretrained_models import PretrainedModel
 
 """
-Description of the LRCN model (including forward pass and caption generation). Much of this is also inherited by the GVE model and hence used in both cases.
+Description of the LRCN model (including forward pass and caption generation). Much of this is also inherited by the GVE 
+model and hence used in both cases.
 """
 
 
@@ -35,9 +36,11 @@ class LRCN(nn.Module):
         # the desired embedding size
         self.word_embed = nn.Embedding(vocab_size, word_embed_size, padding_idx=0)
 
-        # the first layer takes the embedding of the previously generated word as input, hence the input size is that of a word embedding
+        # the first layer takes the embedding of the previously generated word as input, hence the input size is that of
+        # a word embedding
         lstm1_input_size = word_embed_size
-        # the second layer takes the output of the first layer as well as the image features (passed through 'self.linear1' first), both of which are equal in size to the hidden size
+        # the second layer takes the output of the first layer as well as the image features (passed through
+        # 'self.linear1' first), both of which are equal in size to the hidden size
         lstm2_input_size = 2 * hidden_size
 
         # define the layers with the correct input and output sizes
@@ -61,6 +64,8 @@ class LRCN(nn.Module):
         self.linear2.bias.data.fill_(0)
 
     # Implementation of a forward pass. TODO what is the input, especially captions
+    #  TODO DANIELA: I believe input should be the image features and the captions, the annotations from the COCO
+    #   dataset (using them as gold standard)
     def forward(self, image_inputs, captions, lengths, feat_func=None):
 
         # set the featured function to default if none is explicitly given
@@ -91,9 +96,11 @@ class LRCN(nn.Module):
         image_features = image_features.expand(-1, embeddings.size(1), -1)
 
         # TODO: why do we need this here and not below? because it's captions here?
+        # TODO DANIELA: This packs the embeddings. Packing padded sequences saves useless computation that working with
+        #  padding (irrelevant tokens) entails. I think this is just to agilize the computation for the LSTM
         packed = pack_padded_sequence(embeddings, lengths, batch_first=True)
 
-        # pass through the first lstm layer
+        # pass through the first lstm layer. First only the captions!
         hiddens, _ = self.lstm1(packed)
         unpacked_hiddens, new_lengths = pad_packed_sequence(hiddens, batch_first=True)
 
@@ -118,6 +125,8 @@ class LRCN(nn.Module):
         return outputs
 
     # TODO where is this uses? not in this file, it seems
+    # TODO DANIELA: this overrides a state_dict function. State_dicts are normally used for training
+
     #    def state_dict(self, *args, full_dict=False, **kwargs):
     #        state_dict = super().state_dict(*args, **kwargs)
     #        if self.has_vision_model and not full_dict:
