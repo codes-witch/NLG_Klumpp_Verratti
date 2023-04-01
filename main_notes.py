@@ -170,9 +170,9 @@ if __name__ == '__main__':
             if trainer.REQ_EVAL:
                 score = dataset.eval(result, "results")
 
-    # NOTE AND TODO: What does 'sc' mean here? Is it another kind of model? Why is it relevant here?
+    # NOTE AND TODO: What does 'sc' mean here? Is it another kind of model? Why is it relevant here? See answer below
 
-    # If what we are testing/validating is the SentenceClassifier, save results in a JSON file #TODO I am unsure
+    # NOTE: If what we are testing/validating is the SentenceClassifier, save results in a JSON file #TODO I am unsure
     if not args.train and args.model == 'sc':
         with open('results.json', 'w') as f:
             json.dump(result, f)
