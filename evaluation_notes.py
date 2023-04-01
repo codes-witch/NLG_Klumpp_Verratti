@@ -29,50 +29,9 @@ def get_args(argstring=None, verbose=False):
     return args
 
 
-def plot_images(target_img, dis_cell, sim_cell, issue_name, max_display=5):
-    """
-    None of these comments are mine. This is not called anywhere
-    """
-    # 3 rows: target image (first row)
-    # then 5 distractors, 5 similars
-
-    # Create a figure with sub-plots
-    fig, axes = plt.subplots(3, max_display, figsize=(20, 10))
-
-    # Adjust the vertical spacing
-    hspace = 0.2
-    fig.subplots_adjust(hspace=hspace, wspace=0.3)
-
-    # plot the target image
-    axes.flat[0].imshow(Image.open("./data/cub/images/" + target_img))
-    axes.flat[0].set_xlabel("Target Image \n" + target_img.split("/")[0])
-    axes.flat[0].set_xticks([])
-    axes.flat[0].set_yticks([])
-    for i in range(1, max_display):
-        fig.delaxes(axes.flat[i])
-
-    for i in range(min(len(sim_cell), max_display)):
-        img_id = sim_cell[i]
-        axes.flat[max_display + i].imshow(Image.open("./data/cub/images/" + img_id))
-        axes.flat[max_display + i].set_xlabel("Similar Image \n" + img_id.split("/")[0])
-        axes.flat[max_display + i].set_xticks([])
-        axes.flat[max_display + i].set_yticks([])
-
-    for i in range(min(len(dis_cell), max_display)):
-        img_id = dis_cell[i]
-        axes.flat[max_display * 2 + i].imshow(Image.open("./data/cub/images/" + img_id))
-        axes.flat[max_display * 2 + i].set_xlabel("Dissimilar Image \n" + img_id.split("/")[0])
-        axes.flat[max_display * 2 + i].set_xticks([])
-        axes.flat[max_display * 2 + i].set_yticks([])
-
-    fig.suptitle("Issue: {}".format(issue_name))
-    # Show the plot
-    plt.show()
-
-
 class CUBPartitionDataset(object):
     """
-    A class to help manage partitions of the CUB dataset.
+    A class to manage partitions of the CUB dataset.
 
     Uses the following instance variables:
         From parameters:
@@ -213,6 +172,7 @@ def generate_caption_for_test(save_file_prefix, max_cap_per_cell=40, rationality
 
     # Get all image IDs for the test set
     test_ids = []
+    # TODO change test file name!
     with open(pjoin(cub_partition.image_folder, 'test_small.txt')) as f:
         for line in f:
             test_ids.append(line.strip())
@@ -248,7 +208,7 @@ def generate_caption_for_test(save_file_prefix, max_cap_per_cell=40, rationality
                 _, label = rsa_dataset.get_batch([imgid])
                 avg = img_features.mean(dim=0, keepdim=True)
 
-                print(avg)
+                # print(avg)
 
                 cap = rsa_model.semantic_speaker(image_input=avg, labels=label)[0]
 
@@ -286,7 +246,8 @@ def generate_literal_caption_for_test(save_file_prefix):
     open(save_file_prefix + "_gen_captions.json", 'w').close()
 
     test_ids = []
-    with open(pjoin(cub_partition.image_folder, 'test.txt')) as f:
+    # TODO change test name for running late
+    with open(pjoin(cub_partition.image_folder, 'test_small.txt')) as f:
         for line in f:
             test_ids.append(line.strip())
 
@@ -297,7 +258,7 @@ def generate_literal_caption_for_test(save_file_prefix):
     # Populate the dictionary.
     for imgid in tqdm(test_ids):
         img_id_to_caption[imgid] = {}
-        # img_id_to_partition_idx[imgid] = {} (Unnecessary - deleted by us)
+        # img_id_to_partition_idx[imgid] = {} (TODO Unnecessary - deleted by us)
         img_issues, issue_names = cub_partition.get_valid_issues(imgid)
 
         # get the caption from the semantic speaker
@@ -307,7 +268,7 @@ def generate_literal_caption_for_test(save_file_prefix):
         for issue_id, issue_name in zip(img_issues, issue_names):
             img_id_to_caption[imgid][issue_id] = cap
 
-    # Once populated, save the dictionary in a Json file
+    # Once populated, save the dictionary in a JSON file
     json.dump(img_id_to_caption, open(save_file_prefix + "_gen_captions.json", 'w'))
 
 if __name__ == '__main__':
@@ -323,13 +284,11 @@ if __name__ == '__main__':
     parser.add_argument('--run_time', type=int, default=4, help="format is ./results/{}, no slash after")
     args = parser.parse_args()
 
-    # This will run by default all experiments (S0, S1, S1_C and S1_C+H
-
-    # If one wishes to only run one experiment, set the number in the parameters and uncomment this code and comment out
-    # the code below it. The rationality has been hardcoded to be the one used in the paper, but it can easily be
-    # changed
-
     time = args.exp_num
+
+    # If one wishes to only run one experiment, set the number in the parameter (--exp_num)
+    # The rationality has been hardcoded to be the one used in the paper for each experiment,
+    # but it can easily be changed
 
     os.makedirs(pjoin(args.root_dir, "random_run_{}".format(time), "test.txt"), exist_ok=True)
     save_dir = pjoin(args.root_dir, "random_run_{}".format(time))
@@ -353,6 +312,10 @@ if __name__ == '__main__':
 
     if args.exp_num == 4:
         generate_caption_for_test(save_dir + "/S0_AVG", s_avg=True)
+
+    # If you wish to run all experiments in one run, uncomment the code below and comment out the one above. Set exp_num
+    # to 5 to run all 4 experiments.
+
     #
     # for time in range(args.run_time):
     #
@@ -391,3 +354,6 @@ if __name__ == '__main__':
     #                                   rationality=args.rationality,
     #                                   entropy_penalty_alpha=args.entropy)
     #
+    #     # Generate captions with S0_AVG
+    #     if args.exp_num == 4:
+    #         generate_caption_for_test(save_dir + "/S0_AVG", s_avg=True)
