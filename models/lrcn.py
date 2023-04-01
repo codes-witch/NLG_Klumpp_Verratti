@@ -125,14 +125,15 @@ class LRCN(nn.Module):
         return outputs
 
     # TODO where is this uses? not in this file, it seems
-    # TODO DANIELA: this overrides a state_dict function. State_dicts are normally used for training
+    # TODO DANIELA: this overrides a state_dict function. State_dicts are normally used for training. This is used in
+    #  rsa_notes, load_model when we assign the variable model_dict
 
-    #    def state_dict(self, *args, full_dict=False, **kwargs):
-    #        state_dict = super().state_dict(*args, **kwargs)
-    #        if self.has_vision_model and not full_dict:
-    #            for key in self.vision_model.state_dict().keys():
-    #                del state_dict['vision_model.{}'.format(key)]
-    #        return state_dict
+    def state_dict(self, *args, full_dict=False, **kwargs):
+        state_dict = super().state_dict(*args, **kwargs)
+        if self.has_vision_model and not full_dict:
+            for key in self.vision_model.state_dict().keys():
+                del state_dict['vision_model.{}'.format(key)]
+        return state_dict
 
     # Sample from the distribution 'logits'
     def sample(self, logits):
@@ -222,4 +223,3 @@ class LRCN(nn.Module):
             return sampled_ids, log_probabilities, lengths
         # otherwise, return just the predictions
         return sampled_ids
-
