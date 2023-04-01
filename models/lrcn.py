@@ -144,6 +144,7 @@ class LRCN(nn.Module):
 
     def generate_sentence(self, image_inputs, start_word, end_word, states=(None, None),
                           max_sampling_length=50, sample=False, feat_func=None):
+        print("NOW IN GENERATE SENTENCE")
 
         # set the featured function to default if none is explicitly given
         if feat_func is None:
@@ -156,10 +157,12 @@ class LRCN(nn.Module):
         else:
             image_features = image_inputs
         # the image features are first passed through the linear layer
+        print("linear1")
         image_features = self.linear1(image_features)
         # apply rectified linear unit function (a function that "cuts off" everything where x<=0)
         image_features = F.relu(image_features)
         # apply the featured function specified above
+        print("feat_func")
         image_features = feat_func(image_features)
         image_features = image_features.unsqueeze(1)
 
@@ -181,6 +184,7 @@ class LRCN(nn.Module):
         # generate words until the end word has been reached
         while not reached_end.all() and i < max_sampling_length:
             # the input is the previous word as an embedding
+            print(i, "LSTM1")
             lstm1_input = embedded_word
 
             # pass through the first lstm layer
@@ -189,32 +193,32 @@ class LRCN(nn.Module):
             # concatenate output of first layer with image features
             lstm1_output = torch.cat((image_features, lstm1_output), 2)
 
-        # pass both through the second lstm layer
-        lstm2_output, lstm2_states = self.lstm2(lstm1_output, lstm2_states)
+            # pass both through the second lstm layer
+            lstm2_output, lstm2_states = self.lstm2(lstm1_output, lstm2_states)
 
-        # pass through the final linear layer
-        outputs = self.linear2(lstm2_output.squeeze(1))
+            # pass through the final linear layer
+            outputs = self.linear2(lstm2_output.squeeze(1))
 
-        if sample:
-            # if 'sample' is true, the predicted word is sampled from the outputs
-            predicted, log_p = self.sample(outputs)
-            # the log probability of the prediction is stored as well
-            active_batches = (~reached_end)
-            log_p *= active_batches.float().to(log_p.device)
-            log_probabilities.append(log_p.unsqueeze(1))
-            lengths += active_batches.long()
-        else:
-            # if 'sample' is false, the predicted word is just the most probable
-            predicted = outputs.max(1)[1]
-        # the end is reached if 1) it was reached beforehand, or 2) the new word is the end word
-        reached_end = reached_end | predicted.eq(end_word).data
-        # append predicted word to list of previous words
-        sampled_ids.append(predicted.unsqueeze(1))
-        # generate word embedding from the predicted word to be used as input in the next iteration
-        embedded_word = self.word_embed(predicted)
-        embedded_word = embedded_word.unsqueeze(1)
+            if sample:
+                # if 'sample' is true, the predicted word is sampled from the outputs
+                predicted, log_p = self.sample(outputs)
+                # the log probability of the prediction is stored as well
+                active_batches = (~reached_end)
+                log_p *= active_batches.float().to(log_p.device)
+                log_probabilities.append(log_p.unsqueeze(1))
+                lengths += active_batches.long()
+            else:
+                # if 'sample' is false, the predicted word is just the most probable
+                predicted = outputs.max(1)[1]
+            # the end is reached if 1) it was reached beforehand, or 2) the new word is the end word
+            reached_end = reached_end | predicted.eq(end_word).data
+            # append predicted word to list of previous words
+            sampled_ids.append(predicted.unsqueeze(1))
+            # generate word embedding from the predicted word to be used as input in the next iteration
+            embedded_word = self.word_embed(predicted)
+            embedded_word = embedded_word.unsqueeze(1)
 
-        i += 1  # increase index
+            i += 1  # increase index
 
         sampled_ids = torch.cat(sampled_ids, 1).squeeze()
         if sample:
