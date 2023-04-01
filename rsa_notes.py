@@ -946,40 +946,40 @@ class IncRSA(RSA):
 
         return self.sentence_decode(sample_ids)
 
-
-    def greedy_pragmatic_speaker(self, img_id, question_id, rationality,
-                                 speaker_prior, entropy_penalty_alpha,
-                                 max_cap_per_cell=5, cell_select_strategy=None,
-                                 no_similar=False, verbose=True, return_diagnostic=False, segment=False,
-                                 subset_similarity=False):
-        # collect_stats: debug mode (or eval mode); collect RSA statistics to understand internal workings
-        # TODO only called in the debugger - not really used
-        if max_cap_per_cell == 0:
-            return self.semantic_speaker([img_id], decode_strategy="greedy")
-
-        dis_cell, sim_cell, quality = self.rsa_dataset.get_cells_by_partition(img_id, question_id, max_cap_per_cell,
-                                                                              cell_select_strategy,
-                                                                              no_similar=no_similar,
-                                                                              segment=segment,
-                                                                              subset_similarity=subset_similarity)
-
-        image_id_list = [img_id] + sim_cell + dis_cell
-        with torch.no_grad():
-            if not return_diagnostic:
-                captions = self.greedy_pragmatic_speaker_free(image_id_list, len(sim_cell),
-                                                              rationality, speaker_prior, entropy_penalty_alpha)
-            else:
-                captions, diags = self.greedy_pragmatic_speaker_free(image_id_list, len(sim_cell),
-                                                                     rationality, speaker_prior, entropy_penalty_alpha,
-                                                                     return_diagnostic=True)
-
-        if return_diagnostic:
-            return captions[0], quality, diags
-
-        return captions[0], quality
+    #
+    # def greedy_pragmatic_speaker(self, img_id, question_id, rationality,
+    #                              speaker_prior, entropy_penalty_alpha,
+    #                              max_cap_per_cell=5, cell_select_strategy=None,
+    #                              no_similar=False, verbose=True, return_diagnostic=False, segment=False,
+    #                              subset_similarity=False):
+    #     # collect_stats: debug mode (or eval mode); collect RSA statistics to understand internal workings
+    #     # TODO only called in the debugger - not really used
+    #     if max_cap_per_cell == 0:
+    #         return self.semantic_speaker([img_id], decode_strategy="greedy")
+    #
+    #     dis_cell, sim_cell, quality = self.rsa_dataset.get_cells_by_partition(img_id, question_id, max_cap_per_cell,
+    #                                                                           cell_select_strategy,
+    #                                                                           no_similar=no_similar,
+    #                                                                           segment=segment,
+    #                                                                           subset_similarity=subset_similarity)
+    #
+    #     image_id_list = [img_id] + sim_cell + dis_cell
+    #     with torch.no_grad():
+    #         if not return_diagnostic:
+    #             captions = self.greedy_pragmatic_speaker_free(image_id_list, len(sim_cell),
+    #                                                           rationality, speaker_prior, entropy_penalty_alpha)
+    #         else:
+    #             captions, diags = self.greedy_pragmatic_speaker_free(image_id_list, len(sim_cell),
+    #                                                                  rationality, speaker_prior, entropy_penalty_alpha,
+    #                                                                  return_diagnostic=True)
+    #
+    #     if return_diagnostic:
+    #         return captions[0], quality, diags
+    #
+    #     return captions[0], quality
 
     def fill_list(self, items, lists):
-        # this is a pass-by-reference update
+        # ORIGINAL COMMENT: this is a pass-by-reference update
         for item, ls in zip(items, lists):
             ls.append(item)
 
@@ -1029,8 +1029,6 @@ class IncRSA(RSA):
         image_features = F.relu(image_features)
         # Concatenate the one-hot class encoding
         image_features = feat_func(image_features)
-        # Adds a new dimension at index 1
-        # TODO why? something to do with channels and convolutional neural networks?
         image_features = image_features.unsqueeze(1)
 
         # get the embedding of the start word and repeat it so that each image gets the same start word embedding
@@ -1057,9 +1055,9 @@ class IncRSA(RSA):
             # previously predicted word
             lstm1_input = embedded_word
 
-            # First LSTM pass
+            # First LSTM pass - so far only the embedded word
             lstm1_output, lstm1_states = self.model.lstm1(lstm1_input, lstm1_states)
-            # concatenate the output of the lstm with the image features once more
+            # We concatenate the image features to the output of the embedded word passed through LSTM1
             lstm1_output = torch.cat((image_features, lstm1_output), 2)
 
             # Second LSTM pass. LSTM1 output used as input.
@@ -1116,7 +1114,7 @@ class IncRSA(RSA):
                 log_p *= active_batches.float().to(log_p.device)
 
             else:
-                predicted = outputs.max(1)[1]
+                predicted = outputs.max(1)[1] # [1] is basically argmax
 
             # Update the captions that have reached the end: also those that now have predicted EOS
             reached_end = reached_end | predicted.eq(end_word).data
@@ -1138,398 +1136,6 @@ class IncRSA(RSA):
         return self.sentence_decode(sampled_ids)
 
 
-"""
-Essentially this is almost exactly the same as IncRSA
-Except we add some new method, such as trace, visualize etc.
-
-This is a stateful solution, but makes interaction easy enough.
-
-"""
-#TODO none of this is called.
-
-class IncRSADebugger(IncRSA):
-
-    def greedy_pragmatic_speaker(self, img_id, question_id, rationality,
-                                 speaker_prior, entropy_penalty_alpha,
-                                 max_cap_per_cell=5, cell_select_strategy=None,
-                                 no_similar=False, verbose=True, return_diagnostic=True,
-                                 segment=True, subset_similarity=True):
-
-        # we will automatically store last sentence
-
-        return_diagnostic = True
-        if max_cap_per_cell == 0:
-            sent = super().greedy_pragmatic_speaker(img_id, question_id, rationality,
-                                                    speaker_prior, entropy_penalty_alpha, max_cap_per_cell,
-                                                    cell_select_strategy,
-                                                    no_similar, verbose, return_diagnostic)
-            return sent
-        else:
-            sent, quality, diags = super().greedy_pragmatic_speaker(img_id, question_id, rationality,
-                                                                    speaker_prior, entropy_penalty_alpha,
-                                                                    max_cap_per_cell, cell_select_strategy,
-                                                                    no_similar, verbose, return_diagnostic,
-                                                                    segment, subset_similarity)
-
-        self.sent = sent
-        self.quality = quality
-        self.diags = diags
-        self.question_id = question_id
-        self.rationality = rationality
-
-        return sent, quality
-
-    def run_full_checks(self):
-        # s0_list, l1_list, u1_list, l1_qud_list, entropy_list, u2_list, u_list, s1_list
-        self.check_s0_row_stochastic(self.diags[0])
-        self.check_l1_column_stochastic(self.diags[1])
-        self.check_u1_sum_of_partial_prob(self.diags[2])
-        self.check_l1_qud_column_normalized(self.diags[3])
-        self.check_u2_entropy_correct(self.diags[4], self.diags[3])
-        self.check_s1_row_normalized(self.diags[-1])
-
-    def check_s0_row_stochastic(self, s0_mat):
-        rand_time_idx = np.random.randint(len(s0_mat))
-        print("S0 - The following value should be 1:", torch.exp(logsumexp(s0_mat[rand_time_idx][0])))
-
-    def check_l1_column_stochastic(self, l1_mat):
-        rand_time_idx = np.random.randint(len(l1_mat))
-
-        print("L1 - The following value should be 1:", torch.exp(logsumexp(l1_mat[rand_time_idx][:, 0])))
-
-    def check_u1_sum_of_partial_prob(self, u1_vec):
-        # if the summed partial prob should be smaller than 1
-        rand_time_idx = np.random.randint(len(u1_vec))
-        rand_v_idx = np.random.randint(u1_vec[rand_time_idx].shape[1])
-
-        for v_idx in range(u1_vec[rand_time_idx].shape[1]):
-            assert torch.exp(u1_vec[rand_time_idx][0, rand_v_idx]) < 1
-
-        print("U1 - The following value should be less than 1:", torch.exp(u1_vec[rand_time_idx][0, rand_v_idx]))
-
-    def check_l1_qud_column_normalized(self, l1_qud_mat):
-        rand_time_idx = np.random.randint(len(l1_qud_mat))
-        print("L1 QuD - The following value should be 1:", torch.exp(logsumexp(l1_qud_mat[rand_time_idx][:, 0])))
-
-    def check_u2_entropy_correct(self, u2_vec, l1_qud_mat):
-        # use Scipy to compute entropy, check if it's the same
-        rand_time_idx = np.random.randint(len(u2_vec))
-        rand_v_idx = np.random.randint(l1_qud_mat[rand_time_idx].shape[1])
-
-        v_prob = torch.exp(l1_qud_mat[rand_time_idx][:, rand_v_idx]).cpu().numpy()
-        h = entropy(v_prob)
-
-        print("U2 - The following two values should equal {} == {}".format(
-            h, u2_vec[rand_time_idx][0, rand_v_idx]
-        ))
-
-    def check_s1_row_normalized(self, s1_mat):
-        rand_time_idx = np.random.randint(len(s1_mat))
-        print("S0 - The following value should be 1:", torch.exp(logsumexp(s1_mat[rand_time_idx][0])))
-
-    def compute_rank(self, a):
-        temp = a.argsort()[::-1]
-        ranks = np.empty_like(temp)
-        ranks[temp] = np.arange(len(a))
-
-        # rank: each position corresponds to the original item (rank of each item, same order as original list)
-        # temp: [smallest to largest] (order of original list)
-        return ranks, temp
-
-    def compute_stats(self, torch_ls, focus_idx):
-        # return ranking/medium/mean/min/max
-        a = torch_ls.squeeze().cpu().numpy()
-        ranks, _ = self.compute_rank(a)
-
-        return ranks[focus_idx], [np.mean(a), np.median(a), np.min(a), np.max(a), np.std(a)]
-
-    def get_index_from_word(self, word):
-        vocab = self.evaluator.dataset.vocab
-        return vocab(word)
-
-    def get_word_from_index(self, idx):
-        vocab = self.evaluator.dataset.vocab
-        return vocab.get_word_from_idx(idx)
-
-    def stats_to_str(self, stats):
-        concat_str = ""
-        for tup in zip("mean/median/min/max/std".split('/'), stats):
-            concat_str += "{}: {:.3f} ".format(tup[0], tup[1])
-
-        return concat_str
-
-    def numeric_space(self, matrix, prob_space):
-        if prob_space:
-            return torch.exp(matrix)
-        else:
-            return matrix
-
-    def get_ranked_item_index(self, diag_list_idx, timestep, rank_indices, is_item_word=True):
-        """
-        Used to examine "U1 word "spotted" has value -0.256 ranked 3th/3012"
-        What are the words higher than "spotted"? Do they have lower entropy? We need to trace those!
-
-        s0_list, l1_list, u1_list, l1_qud_list, entropy_list, u2_list, u_list, s1_lis
-        :param diag_list_idx: put in 0 to len(self.diags)
-        :param rank_indices: the top-k items that we want (i.e., [0,1,2,3]) or [2, 5])
-        :param is_item_word: if we are looking for a word, we return word; otherwise we return index
-        :return: [(word/index, value)]
-        """
-        # we return index
-        item_list = self.diags[diag_list_idx]
-        item_unit = item_list[timestep]
-        if diag_list_idx in [0, 1, -1]:
-            values = item_unit[0, :].squeeze().cpu().numpy()
-        else:
-            values = item_unit.squeeze().cpu().numpy()
-
-        ranks, temp = self.compute_rank(values)
-        top_k = temp[rank_indices]
-
-        if is_item_word:
-            return [self.get_word_from_index(k) for k in top_k], values[top_k]
-        else:
-            return top_k, values[top_k]
-
-    def compute_rsa_decision_path_for_word(self, timestep, focus_word=None, verbose=True, prob_space=False,
-                                           return_rank=False):
-        """
-        Conclusion: Ranking, and global stats, with negative words should satisfy ALL our debugging needs.
-        We can quantify "failure" cases using the stats we collected here
-
-        Basic requirements:
-        1. In normal RSA:
-            1). For S0, we print the relative ranking of word of choice in row, medium/mean/min/max/CI of the list
-            2). For our focus word, in L1, we display word prob in target, and word probs in distractor, display it's ranking (in this limited group), medium/mean/min/max of the list
-                -- p(i|u); if our "u" cannot even signal "i", then semantic model S0 failure!
-                -- if word prob that we want is not the highest in target, then our S0 failed already (this is a "relative" measure)
-                -- Assert: target w needs to be 1st
-            3). For our focus word, in pre-prior S1, we compute it's row-stats again (to see if it's increased)
-                -- p(u|i); without prior
-                -- If target w is not the first, we know how big the gap is between w and w* (because we return max)
-            4). For our focus word, in post-prior S1, we compute it's row-stats again (to see if it's increased)
-                -- p(i|u)p(u|i)
-                -- If target w is not the first, we know how big the gap is between w and w* (because we return max)
-                -- between (3) and (4), we see the effect of prior
-        2. In QuD-Entropy RSA
-            1). Same as 1.1) S0
-                -- word ranking; global stats
-            2). Same as 1.2) L1
-                -- word ranking; global stats
-            3). U1 -- QuD RSA thing (summed from L1).
-                -- word ranking; global stats
-            4). U2/L1* -- Entropy thing (computed from L1*). Relative ranking of the word, stats of the dist.
-                -- word ranking; global stats
-                -- for negative word, we'll just track them seperately
-            5). same as 1.3) pre-prior S1
-                -- might need a magnitude comparison with prior
-            6). same as 1.4) post-prior S1
-
-        :arg timestep: it can be any word in the vocab list (doesn't have to be present in caption)
-        :arg focus_word: we can investigate why this "focus_word" did not appear at timestep t!
-        :arg negative_words: a list of negative words we send in, words that SHOULD NOT appear in the current caption
-
-        :return a packaged stats for future decision making (like check what's broken)
-        """
-        if focus_word is None:
-            focus_word = self.sent.split()[timestep]
-
-        focus_word_idx = self.get_index_from_word(focus_word)
-        # 1). S0 (row)
-        s0_list, l1_list, u1_list, l1_qud_list, entropy_list, u2_list, u_list, s1_list = self.diags
-        s0_mat = self.numeric_space(s0_list[timestep], prob_space)
-
-        s0_rank, s0_stats = self.compute_stats(s0_mat[0, :], focus_word_idx)
-        if verbose:
-            print('S0 word "{}" has value {} ranked {}th/{}, stats: {}'.format(focus_word, s0_mat[0, focus_word_idx],
-                                                                               s0_rank, len(s0_mat[0, :]),
-                                                                               self.stats_to_str(s0_stats)))
-
-        # 2). L1 (column)
-        l1_mat = self.numeric_space(l1_list[timestep], prob_space)
-        l1_rank, l1_stats = self.compute_stats(l1_mat[:, focus_word_idx],
-                                               0)  # here the focus_index is the "target" image p(i|u)
-        if verbose:
-            print('L1 word "{}" has value {} ranked {}th/{}, stats: {}'.format(focus_word, l1_mat[0, focus_word_idx],
-                                                                               l1_rank, len(l1_mat[:, focus_word_idx]),
-                                                                               self.stats_to_str(l1_stats)))
-
-        # 3). U1 (would be the same as L1 in normal RSA setting)
-        u1_vec = self.numeric_space(u1_list[timestep].squeeze(), prob_space)
-        u1_rank, u1_stats = self.compute_stats(u1_vec, focus_word_idx)
-        if verbose:
-            print('U1 word "{}" has value {} ranked {}th/{}, stats: {}'.format(focus_word, u1_vec[focus_word_idx],
-                                                                               u1_rank, len(u1_vec),
-                                                                               self.stats_to_str(u1_stats)))
-
-        # 4). Entropy
-        ent_vec = self.numeric_space(entropy_list[timestep].squeeze(), False)
-        ent_rank, ent_stats = self.compute_stats(ent_vec, focus_word_idx)
-        if verbose:
-            print('Entropy word "{}" has value {} ranked {}th/{}, stats: {}'.format(focus_word,
-                                                                                    ent_vec[focus_word_idx],
-                                                                                    ent_rank, len(ent_vec),
-                                                                                    self.stats_to_str(ent_stats)))
-
-        # 5). U2
-        u2_vec = self.numeric_space(u2_list[timestep].squeeze(), False)
-        u2_rank, u2_stats = self.compute_stats(u2_vec, focus_word_idx)
-        if verbose:
-            print('U2 word "{}" has value {} ranked {}th/{}, stats: {}'.format(focus_word, u2_vec[focus_word_idx],
-                                                                               u2_rank, len(u2_vec),
-                                                                               self.stats_to_str(u2_stats)))
-
-        # 5). Alpha impact (this is pre-prior S1)
-        # multiply with rationality (temperature); higher rationality means
-        # higher rationality means lower influence of this
-        u_vec = self.numeric_space(u_list[timestep].squeeze(), False)
-        u_rank, u_stats = self.compute_stats(u_vec, focus_word_idx)
-        if verbose:
-            print('f(U1, U2) word "{}" has value {} ranked {}th/{}, stats: {}'.format(focus_word, u_vec[focus_word_idx],
-                                                                                      u_rank, len(u_vec),
-                                                                                      self.stats_to_str(u_stats)))
-
-        # 6). Post-prior S1
-        s1_vec = self.numeric_space(s1_list[timestep].squeeze(), prob_space)
-        s1_rank, s1_stats = self.compute_stats(s1_vec, focus_word_idx)
-        if verbose:
-            print('S1 word "{}" has value {} ranked {}th/{}, stats: {}'.format(focus_word, s1_vec[focus_word_idx],
-                                                                               s1_rank, len(s1_vec),
-                                                                               self.stats_to_str(s1_stats)))
-
-        if return_rank:
-            # evolution of ranks through RSA computation
-            # this is the "decision path"
-            # S0, L1, QuD-L1 (U1), f(U1, U2), S1 ~= alpha * f(U1, U2) + prior
-            # the ranks in here are all out of vocab rank
-
-            # L1 is still the rank over vocab space
-            l1_utt_rank, _ = self.compute_stats(l1_mat[0, :], focus_word_idx)
-
-            # in terms of raw value, we can have all of them... but for now, we can skip
-            return [s0_rank, l1_utt_rank, u1_rank, u2_rank, u_rank, s1_rank], []
-
-    def set_plt_style(self):
-        params = {'backend': 'pdf',
-                  'axes.titlesize': 10,
-                  'axes.labelsize': 10,
-                  'font.size': 10,
-                  'legend.fontsize': 10,
-                  'xtick.labelsize': 10,
-                  'ytick.labelsize': 10,
-                  'font.family': 'DejaVu Serif',
-                  'font.serif': 'Computer Modern',
-                  }
-        matplotlib.rcParams.update(params)
-
-    def visualize_words_decision_paths_at_timestep(self, timestep, words, cmap_name=None):
-        # build a line-graph of ranks
-        # each line is a word at the timestep
-
-        self.set_plt_style()
-
-        try:
-            self.diags
-        except:
-            print("Need to run 'greedy_pragmatic_speaker' over an image first!")
-            return
-
-        word_rank = {}
-        word_final_rank = {}
-        for w in words:
-            r, _ = self.compute_rsa_decision_path_for_word(timestep, w, verbose=False, return_rank=True)
-            word_rank[w] = -np.array(r)  # we use "negative" rank
-            word_final_rank[w] = r[-1]
-
-        # gradient = np.linspace(0, 1, 256)
-        # gradient = np.vstack((gradient, gradient))
-
-        # https://stackoverflow.com/questions/9750699/how-to-display-only-a-left-and-bottom-box-border-in-matplotlib
-
-        plt.figure(figsize=(12, 8))
-        # plt.set_cmap("RdBu")
-        ax = plt.gca()
-        # ax.set_prop_cycle('color', [plt.cm.get_cmap('RdBu')(i) for i in np.linspace(0, 1, len(word_rank))])
-        ax.xaxis.set_ticks_position('bottom')
-        ax.yaxis.set_ticks_position('left')
-        ax.spines['right'].set_visible(False)
-        ax.spines['top'].set_visible(False)
-
-        plt.xticks(range(6), ['S0', 'L1', 'U1', 'U2', 'f(U1, U2)', 'S1'])
-        # colors = [plt.cm.get_cmap("RdBu")(i) for i in np.linspace(0, 1, len(word_rank))]
-        if cmap_name is None:
-            colors = [plt.cm.get_cmap("coolwarm")(i) for i in np.linspace(0, 1, len(word_rank))]
-        else:
-            colors = [plt.cm.get_cmap(cmap_name)(i) for i in np.linspace(0, 1, len(word_rank))]
-
-        for i, (w, r) in enumerate(word_rank.items()):
-            plt.plot(range(6), r, marker='o', markersize=3, linewidth=1, color=colors[i], label='"{}"'.format(w))
-            # ax.annotate('"{}"'.format(w), xy=(list(range(6))[-1], r[-1]), xytext=(10, 0), textcoords='offset points', va='center')
-
-        # post y-axis modification
-        start, end = ax.get_ylim()
-        plt.yticks(plt.yticks()[0], [str(int(n)) + "th" for n in -plt.yticks()[0]])
-        ax.set_ylim(bottom=start, top=end)
-
-        plt.title("Timestep {}".format(timestep))
-        plt.legend()
-
-        plt.show()
-
-        return word_final_rank
-
-    def visualize_word_decision_path_at_timesteps(self, word, cmap_name=None):
-        # each line is a time step
-        # we scan through the time steps
-        timesteps = range(len(self.sent.split()))
-
-        self.set_plt_style()
-
-        try:
-            self.diags
-        except:
-            print("Need to run 'greedy_pragmatic_speaker' over an image first!")
-            return
-
-        timestep_rank = {}
-        timestep_final_rank = {}
-        for t in timesteps:
-            r, _ = self.compute_rsa_decision_path_for_word(t, word, verbose=False, return_rank=True)
-            timestep_rank[t] = -np.array(r)
-            timestep_final_rank[t] = r[-1]
-
-        plt.figure(figsize=(12, 8))
-        # plt.set_cmap("RdBu")
-        ax = plt.gca()
-        # ax.set_prop_cycle('color', [plt.cm.get_cmap('RdBu')(i) for i in np.linspace(0, 1, len(word_rank))])
-        ax.xaxis.set_ticks_position('bottom')
-        ax.yaxis.set_ticks_position('left')
-        ax.spines['right'].set_visible(False)
-        ax.spines['top'].set_visible(False)
-
-        plt.xticks(range(6), ['S0', 'L1', 'U1', 'U2', 'f(U1, U2)', 'S1'])
-        # colors = [plt.cm.get_cmap("RdBu")(i) for i in np.linspace(0, 1, len(word_rank))]
-        if cmap_name is None:
-            colors = [plt.cm.get_cmap("coolwarm")(i) for i in np.linspace(0, 1, len(timestep_rank))]
-        else:
-            colors = [plt.cm.get_cmap(cmap_name)(i) for i in np.linspace(0, 1, len(timestep_rank))]
-
-        for i, (t, r) in enumerate(timestep_rank.items()):
-            plt.plot(range(6), r, marker='o', markersize=3, linewidth=1, color=colors[i], label='step {}'.format(t))
-            # ax.annotate('At step {}'.format(t), xy=(list(range(6))[-1], r[-1]), xytext=(10, 0), textcoords='offset points',
-            #             va='center')
-
-        # post y-axis modification
-        start, end = ax.get_ylim()
-        plt.yticks(plt.yticks()[0], [str(int(n)) + "th" for n in -plt.yticks()[0]])
-        ax.set_ylim(bottom=start, top=end)
-
-        plt.title('Word "{}"'.format(word))
-        plt.legend()
-
-        plt.show()
-
-        return timestep_final_rank
 
 
 if __name__ == '__main__':
