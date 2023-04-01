@@ -23,14 +23,18 @@ class LRCNTrainer:
 
         model.to(self.device)
 
-        # NOTE TODO: Could you maybe look at all the checkpoint-related stuff, since it doesn't work for me?
-        # TODO: Implement checkpoint recovery
+        # NOTE: If no checkpoint has been passed, set hyperparameters and more settings. The current epoch is 0
         if checkpoint is None:
+            # NOTE: Loss
             self.criterion = nn.CrossEntropyLoss()
+            # NOTE: parameters
             self.params = filter(lambda p: p.requires_grad, model.parameters())
+            # NOTE: Use Adam as optimizer
             self.optimizer = torch.optim.Adam(self.params, lr=args.learning_rate)
+            # NOTE TODO not fully sure what this is. does this not depend on batch_size and number of epochs?
             self.total_steps = len(data_loader)
             self.num_epochs = args.num_epochs
+            # NOTE: How often we log
             self.log_step = args.log_step
             self.curr_epoch = 0
 
@@ -50,8 +54,9 @@ class LRCNTrainer:
         result = []
 
         # NOTE and TODO: this goes through all batches, not through all instances, right?
+        # NOTE and TODO: Daniela: I think this should be the whole data
         for i, (image_input, word_inputs, word_targets, lengths, ids, *excess) in enumerate(self.data_loader):
-            # Prepare mini-batch dataset
+            # Prepare mini-batch dataset, send to CPU or CUDA
             image_input = image_input.to(self.device)
 
             if self.train:
@@ -75,9 +80,13 @@ class LRCNTrainer:
                 generated_captions = self.eval_step(image_input, ids, *excess)
                 result.extend(generated_captions)
 
-            # NOTE TODO: The logging happens after each log_step batches (?), but the comments in the
-            # original code (the To-do comment) indicate that it is not fully implemented.
-            # This does not really have to bother us because the code probably works even without it.
+            # NOTE and TODO: The logging happens after each log_step batches (?), but the comments in the original
+            # code (the To-do comment) indicate that it is not fully implemented. This does not really have to
+            # bother us because the code probably works even without it.
+
+            # NOTE and TODO: (DANIELA Yes. What they do here is simply print out the current loss and perplexity.
+            #  It's not logged using Tensorboard. I don't think it's particularly relevant to implement the logging.
+            #  It does not affect the main functioning of the code
 
             # TODO: Add proper logging
             # Print log info
@@ -107,7 +116,6 @@ class LRCNTrainer:
         outputs = self.model(image_input, word_inputs, lengths)
         loss = self.criterion(outputs, word_targets)
         loss.backward()
-        #nn.utils.clip_grad_norm(self.params, 10)
         self.optimizer.step()
 
         return loss
@@ -121,6 +129,9 @@ class LRCNTrainer:
         # NOTE: The output initially consists of a continuous stream of word embeddings. The following
         # nested for-loops are used to convert this into a caption by converting the embeddings to words in the
         # vocabulary until an end-of-caption token is reached. NOTE and TODO: Do you agree with that interpretation?
+
+        # NOTE and TODO: I don't really agree. I think output initially is a continuous stream of word indices, not
+        #  embeddings. Then those indices are checked against the vocabulary to obtain the actual word string
         for out_idx in range(len(outputs)):
             sentence = []
             for w in outputs[out_idx]:
