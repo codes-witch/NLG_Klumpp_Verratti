@@ -12,7 +12,7 @@ from pycocotools.coco import COCO
 from pycocoevalcap.eval import COCOEvalCap
 #import nltk
 
-from utils.vocabulary_notes import Vocabulary
+from utils.vocabulary import Vocabulary
 from utils.tokenizer.ptbtokenizer import PTBTokenizer
 
 # Adapted from
@@ -176,7 +176,7 @@ class CocoDataset(data.Dataset):
         class_label = torch.LongTensor([int(img_labels[rand_idx])])
         return class_label
 
-    # NOTE TODO: Where is this used?
+    # NOTE TODO: Where is this used? ANSWER: Used whenever we
     def __getitem__(self, index):
         """Returns one data pair (image and caption)."""
         coco = self.coco

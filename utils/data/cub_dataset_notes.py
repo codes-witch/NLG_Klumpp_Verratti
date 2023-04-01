@@ -12,7 +12,7 @@ from pycocotools.coco import COCO
 from pycocoevalcap.eval import COCOEvalCap
 # import nltk
 
-from utils.vocabulary_notes import Vocabulary
+from utils.vocabulary import Vocabulary
 from utils.tokenizer.ptbtokenizer import PTBTokenizer
 
 from .coco_dataset_notes import CocoDataset
@@ -76,7 +76,7 @@ class CubDataset(CocoDataset):
         self.class_labels = label_dict
 
     # NOTE: gets image features if there are features specified
-    # NOTE TODO: 1. where is this used? 2. why does it inherit from the COCO file?
+    # NOTE: Used in get_batch (rsa_notes.py, BirdDistractorDataset class) 2. why does it inherit from the COCO file?
     def get_image(self, img_id):
         if self.img_features is not None:
             image = self.img_features[img_id]
