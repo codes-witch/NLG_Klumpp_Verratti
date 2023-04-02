@@ -10,23 +10,27 @@ class SentenceClassifier(nn.Module):
     def __init__(self, word_embed_size, hidden_size, vocab_size, num_classes,
             dropout_prob=0.5):
         super(SentenceClassifier, self).__init__()
-
+        #   Initialize embedding matrix
         self.word_embed = nn.Embedding(vocab_size, word_embed_size, padding_idx=0)
-
+        # LSTM1 gets word embeddings as input
         lstm1_input_size = word_embed_size
-
+        # Define subsequent layers
         self.lstm = nn.LSTM(lstm1_input_size, hidden_size, batch_first=True)
-                #bidirectional=True)
         self.linear = nn.Linear(hidden_size, num_classes)
+        # Initialize the weights
         self.init_weights()
 
         self.input_size = vocab_size
+
+        # We want a probability distribution over the potential classes (bird species)
         self.output_size = num_classes
         self.dropout_prob = dropout_prob
 
     def init_weights(self):
+        # Randomly initialize weights with numbers from -0.1 t 0.1
         self.word_embed.weight.data.uniform_(-0.1, 0.1)
         self.linear.weight.data.uniform_(-0.1, 0.1)
+        # Set the values of the bias to 0
         self.linear.bias.data.fill_(0)
 
     def state_dict(self, *args, full_dict=False, **kwargs):
