@@ -14,6 +14,7 @@ def get_transform(net, train=True):
     if net is None:
         transform = None
     # if a vgg model is given, get the transform, which is different for training vs. the other conditions
+    # vgg is the only possible model we can use
     elif net.startswith('vgg'):
         if train:
             transform = transforms.Compose([transforms.Resize(256),
