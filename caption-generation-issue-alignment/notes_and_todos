@@ -22,5 +22,6 @@ Things we have to do here now:
 - remove the rest of the unnecessary methods (which should all be in comments now)
 - think about merging files (e.g. files that are in the same directory, such as the trainers), or regrouping methods from files (important to change the reference everywhere then)
 - think about renaming files (e.g. "evaluation" into "caption generation")
+- also, putting a short comment into every file that states which original files it is based on, and the readmes for the folders
 
 So, although it's still not finished at all, I'd like to load that stuff up so that we avoid doing things twice.
