@@ -1,0 +1,26 @@
+This folder should (as I think) contain all and only methods that are needed for caption generation and issue alignment evaluation. The methods that still are in comments we can remove later.
+
+I've decided to put this into a separate folder because I want to make sure that we do neither forget files we need nor put stuff in we don't need. So this should only be code that we want to include (with changes, maybe, but no unnecessary stuff).
+
+Most things except for the models are commented (either by you or by me), but some are not. Where there are no comments yet, TODOs are inserted (i.e., if there are no TODOs, it should be commented somehow, though not with the same degree of detail everywhere).
+
+The models are not commented yet.
+
+Additionally, data from the data and checkpoints folder is needed.
+
+Some of the files should be located in specific folders:
+
+- gve, lrcn, model_loader, pretrained_models, sentence_classifier in models
+- gve_trainer, lrcn_trainer, sentence_classifier_trainer, trainer_loader in train
+- coco_dataset, cub_dataset, data_prep in utils/data
+- arg_parser, transform, vocabulary in utils
+
+Things we have to do here now:
+
+- complete comments
+- solve open questions
+- remove the rest of the unnecessary methods (which should all be in comments now)
+- think about merging files (e.g. files that are in the same directory, such as the trainers), or regrouping methods from files (important to change the reference everywhere then)
+- think about renaming files (e.g. "evaluation" into "caption generation")
+
+So, although it's still not finished at all, I'd like to load that stuff up so that we avoid doing things twice.
