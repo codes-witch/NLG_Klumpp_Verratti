@@ -126,12 +126,9 @@ class LRCNTrainer:
         vocab = self.dataset.vocab
         generated_captions = []
         outputs = self.model.generate_sentence(image_input, self.start_word, self.end_word, *args)
-        # NOTE: The output initially consists of a continuous stream of word embeddings. The following
-        # nested for-loops are used to convert this into a caption by converting the embeddings to words in the
-        # vocabulary until an end-of-caption token is reached. NOTE and TODO: Do you agree with that interpretation?
-
-        # NOTE and TODO: I don't really agree. I think output initially is a continuous stream of word indices, not
-        #  embeddings. Then those indices are checked against the vocabulary to obtain the actual word string
+        # NOTE: The output is a continuous stream of word indices. The following nested for-loops are used to convert
+        # this into a caption by retrieving the word associated to that index from the vocabulary until an 
+        # end-of-caption token is reached.
         for out_idx in range(len(outputs)):
             sentence = []
             for w in outputs[out_idx]:
