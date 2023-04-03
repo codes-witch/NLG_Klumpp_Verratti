@@ -49,6 +49,11 @@ class LRCNTrainer:
 
 
     def train_epoch(self):
+        """
+        The purpose of this function is twofold:
+        1. If this is called during training, it trains an epoch and returns the losses.
+        2. If it is called in evaluation, it generates captions for evaluation and returns them.
+        """
         # Result is list of losses during training
         # and generated captions during evaluation
         result = []

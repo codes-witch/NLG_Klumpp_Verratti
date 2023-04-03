@@ -219,7 +219,7 @@ class CocoDataset(data.Dataset):
     def __len__(self):
         return len(self.ids)
 
-    # NOTE TODO: Is this used, and if so, where?
+    # NOTE TODO: Is this used, and if so, where? YES. Main val_dataset.eval()
     def eval(self, captions, checkpoint_path, score_metric='CIDEr'):
         # TODO: Make strings variables
         captions_path = checkpoint_path + "-val-captions.json"
