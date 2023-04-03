@@ -24,4 +24,10 @@ Things we have to do here now:
 - think about renaming files (e.g. "evaluation" into "caption generation")
 - also, putting a short comment into every file that states which original files it is based on, and the readmes for the folders
 
+
+Things we can do in the end if we still have time:
+- divide lrcn_trainer train_epoch() into two methods, one for training, and one for evaluation
+
+
+
 So, although it's still not finished at all, I'd like to load that stuff up so that we avoid doing things twice.
