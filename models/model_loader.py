@@ -1,8 +1,8 @@
 import torch
 
-from lrcn import LRCN
-from gve import GVE
-from sentence_classifier import SentenceClassifier
+from .lrcn import LRCN
+from .gve import GVE
+from .sentence_classifier import SentenceClassifier
 
 
 class ModelLoader:
