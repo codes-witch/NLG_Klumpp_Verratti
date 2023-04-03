@@ -74,7 +74,7 @@ if __name__ == '__main__':
     # If we are not training, get the weights and training states from the checkpoint
     if not args.train:
         print("Loading Model Weights ...")
-        evaluation_state_dict = torch.load(args.eval_ckpt)
+        evaluation_state_dict = torch.load(args.eval_ckpt, map_location=device)
         model_dict = model.state_dict(full_dict=True)
         model_dict.update(evaluation_state_dict)
         model.load_state_dict(model_dict)
