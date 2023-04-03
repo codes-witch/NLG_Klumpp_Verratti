@@ -27,7 +27,7 @@ class SentenceClassifier(nn.Module):
         self.dropout_prob = dropout_prob
 
     def init_weights(self):
-        # Randomly initialize weights with numbers from -0.1 t 0.1
+        # Randomly initialize weights with numbers from -0.1 to 0.1
         self.word_embed.weight.data.uniform_(-0.1, 0.1)
         self.linear.weight.data.uniform_(-0.1, 0.1)
         # Set the values of the bias to 0
@@ -37,21 +37,27 @@ class SentenceClassifier(nn.Module):
         return super().state_dict(*args, **kwargs)
 
     def forward(self, captions, lengths):
+        # Get caption embeddings
         embeddings = self.word_embed(captions)
+        # apply dropout to embeddings
         embeddings = F.dropout(embeddings, p=self.dropout_prob, training=self.training)
 
+        # pack embeddings to agilize computation
         packed = pack_padded_sequence(embeddings, lengths, batch_first=True)
+        # pass through LSTM
         hiddens, _ = self.lstm(packed)
+        # pack LSTM outputs
         hiddens, _ = pad_packed_sequence(hiddens, batch_first=True)
 
-        # Extract the outputs for the last timestep of each example
+        # Original comment: Extract the outputs for the last timestep of each example
         idx = (torch.LongTensor(lengths) - 1).view(-1, 1).expand(len(lengths), hiddens.size(2))
         idx = idx.unsqueeze(1)
         idx = idx.to(hiddens.device)
 
-        # Shape: (batch_size, hidden_size)
+        # Original comment: Shape: (batch_size, hidden_size)
         last_hiddens = hiddens.gather(1, idx).squeeze(1)
 
+        # apply dropout to last hidden layer
         last_hiddens = F.dropout(last_hiddens, p=self.dropout_prob, training=self.training)
         outputs = self.linear(last_hiddens)
         return outputs
