@@ -49,10 +49,7 @@ class LRCN(nn.Module):
         self.lstm2 = nn.LSTM(lstm2_input_size, hidden_size, batch_first=True)
         self.linear2 = nn.Linear(hidden_size, vocab_size)
         self.init_weights()  # initialize the weights
-
-        # TODO: What does self.input_size represent? why is it larger than input_size? where is the output size used later (not in this file, it seems)?
-        self.input_size = (input_size, vocab_size)
-        self.output_size = vocab_size
+        # state dropout probability
         self.dropout_prob = dropout_prob
 
     def init_weights(self):
@@ -63,16 +60,21 @@ class LRCN(nn.Module):
         self.linear2.weight.data.uniform_(-0.1, 0.1)
         self.linear2.bias.data.fill_(0)
 
-    # Implementation of a forward pass. TODO what is the input, especially captions
-    #  TODO DANIELA: I believe input should be the image features and the captions, the annotations from the COCO
-    #   dataset (using them as gold standard)
     def forward(self, image_inputs, captions, lengths, feat_func=None):
+        """
+        Implementation of a forward pass.
 
-        # set the featured function to default if none is explicitly given
+        Parameters:
+
+            -   image_inputs: the image features
+            -   captions: the gold standard captions for training
+        """
+
+        # set the featured function to default (identity) if none is explicitly given
         if feat_func is None:
             feat_func = lambda x: x
 
-        # TODO: what does 'captions' exactly refer to here?
+        # get the embeddings representing the caption
         embeddings = self.word_embed(captions)
 
         # apply a first dropout in the beginning
@@ -95,27 +97,29 @@ class LRCN(nn.Module):
         image_features = image_features.unsqueeze(1)
         image_features = image_features.expand(-1, embeddings.size(1), -1)
 
-        # TODO: why do we need this here and not below? because it's captions here?
-        # TODO DANIELA: This packs the embeddings. Packing padded sequences saves useless computation that working with
-        #  padding (irrelevant tokens) entails. I think this is just to agilize the computation for the LSTM
+        # This packs the embeddings. Packing padded sequences saves useless computation that working with padding
+        # (irrelevant tokens) entails. This is just to agilize the computation for the LSTM
         packed = pack_padded_sequence(embeddings, lengths, batch_first=True)
 
-        # pass through the first lstm layer. First only the captions!
+        # pass through the first lstm layer. Only the captions go through the first LSTM.
         hiddens, _ = self.lstm1(packed)
+        # Unpack hidden state to concatenate image features
         unpacked_hiddens, new_lengths = pad_packed_sequence(hiddens, batch_first=True)
 
         # concatenate output of first layer with image features
         unpacked_hiddens = torch.cat((image_features, unpacked_hiddens), 2)
 
-        # apply dropout for the first layer
+        # apply dropout after the first layer
         unpacked_hiddens = F.dropout(unpacked_hiddens, p=self.dropout_prob, training=self.training)
+
+        # Pack again to agilize computation
         packed_hiddens = pack_padded_sequence(unpacked_hiddens, lengths,
                                               batch_first=True)
 
         # pass through the second lstm layer
         hiddens, _ = self.lstm2(packed_hiddens)
 
-        # apply dropout for the first layer
+        # apply dropout after the second layer
         hiddens = F.dropout(hiddens[0], p=self.dropout_prob, training=self.training)
 
         # pass through the final linear layer
@@ -124,19 +128,21 @@ class LRCN(nn.Module):
         # return the probabilities associated with each word as outputs
         return outputs
 
-    # TODO where is this uses? not in this file, it seems
-    # TODO DANIELA: this overrides a state_dict function. State_dicts are normally used for training. This is used in
-    #  rsa_notes, load_model when we assign the variable model_dict
-
     def state_dict(self, *args, full_dict=False, **kwargs):
+        """
+        Return the state dictionary of the model, removing keys that are stored in the vision model if full_dict is
+        False.
+        """
         state_dict = super().state_dict(*args, **kwargs)
         if self.has_vision_model and not full_dict:
             for key in self.vision_model.state_dict().keys():
                 del state_dict['vision_model.{}'.format(key)]
         return state_dict
 
-    # Sample from the distribution 'logits'
     def sample(self, logits):
+        """
+         Sample from the distribution logits
+        """
         dist = Categorical(logits=logits)
         sample = dist.sample()
         # return the sample as well as its log probability
