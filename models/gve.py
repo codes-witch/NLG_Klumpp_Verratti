@@ -26,16 +26,20 @@ class GVE(LRCN):
         lstm2_input_size = 2 * hidden_size + num_classes
         self.lstm2 = nn.LSTM(lstm2_input_size, hidden_size, batch_first=True)
 
-    # represent the labels as a one-hot vector
     def convert_onehot(self, labels):
+        """
+        Represent the labels as a one-hot vector
+        """
         labels_onehot = torch.zeros(labels.size(0),
                                     self.num_classes)
         labels_onehot.scatter_(1, labels.unsqueeze(1), 1)
         return labels_onehot
 
-    # return a function that can be used as feat_func in lrcn.forward(), but that makes sure that labels are
-    # concatenated to the image features 'labels' are the labels, 'labels_onehot' is a one-hot representation of them
     def get_labels_append_func(self, labels, labels_onehot):
+        """
+        return a function that can be used as feat_func in lrcn.forward(), but that makes sure that labels are
+         concatenated to the image features 'labels' are the labels, 'labels_onehot' is a one-hot representation of them
+        """
         # if there is no one-hot representation yet, create one
         if labels_onehot is None:
             labels_onehot = self.convert_onehot(labels)
@@ -50,18 +54,22 @@ class GVE(LRCN):
         # (so it still needs 'image_features' as a second argument)
         return partial(append_labels, labels_onehot)
 
-    # forward pass
     def forward(self, image_inputs, captions, lengths, labels,
                 labels_onehot=None):
+        """
+        Forward pass
+        """
         # get the function as defined in 'get_labels_append_func()'
         feat_func = self.get_labels_append_func(labels, labels_onehot)
 
         # execute the forward step from 'lrcn.py', using the function
         return super().forward(image_inputs, captions, lengths, feat_func)
 
-    # generate a sentence
     def generate_sentence(self, image_inputs, start_word, end_word,
                           labels, labels_onehot=None, states=(None, None), max_sampling_length=50, sample=False):
+        """
+        Generate a sentence
+        """
         # get the function as defined in 'get_labels_append_func()'
         feat_func = self.get_labels_append_func(labels, labels_onehot)
         # execute the forward step from 'lrcn.py', using the function
