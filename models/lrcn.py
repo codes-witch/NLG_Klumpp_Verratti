@@ -125,7 +125,7 @@ class LRCN(nn.Module):
         # pass through the final linear layer
         outputs = self.linear2(hiddens)
 
-        # return the probabilities associated with each word as outputs
+        # return the logits associated with each word as outputs
         return outputs
 
     def state_dict(self, *args, full_dict=False, **kwargs):
