@@ -4,6 +4,10 @@ from .lrcn import LRCN
 from .gve import GVE
 from .sentence_classifier import SentenceClassifier
 
+"""
+ModelLoader to load the LRCN, GVE and Sentence Classifier model.
+"""
+
 class ModelLoader:
     def __init__(self, args, dataset):
         self.args = args
@@ -11,15 +15,16 @@ class ModelLoader:
 
 
     def gve(self):
-        # Make sure dataset returns labels
+        # we want to use the CUB data with labels
         self.dataset.set_label_usage(True)
-        # GVE arguments
+        # set GVE arguments
         embedding_size = self.args.embedding_size
         hidden_size = self.args.hidden_size
         vocab_size = len(self.dataset.vocab)
         input_size = self.dataset.input_size
         num_classes = self.dataset.num_classes
 
+        #TODO
         sc = self.sc()
         if torch.cuda.is_available():
             sc.load_state_dict(torch.load(self.args.sc_ckpt))
@@ -37,21 +42,23 @@ class ModelLoader:
             gve.load_state_dict(torch.load(self.args.weights_ckpt))
 
         return gve
-    # def lrcn(self):
-    #     # LRCN arguments
-    #     pretrained_model = self.args.pretrained_model
-    #     embedding_size = self.args.embedding_size
-    #     hidden_size = self.args.hidden_size
-    #     vocab_size = len(self.dataset.vocab)
-    #
-    #     layers_to_truncate = self.args.layers_to_truncate
-    #
-    #     lrcn = LRCN(pretrained_model, embedding_size, hidden_size, vocab_size,
-    #                 layers_to_truncate)
-    #
-    #     return lrcn
+    
+    # TODO: I think we do need this
+    def lrcn(self):
+         # LRCN arguments
+         pretrained_model = self.args.pretrained_model
+         embedding_size = self.args.embedding_size
+         hidden_size = self.args.hidden_size
+         vocab_size = len(self.dataset.vocab)
+    
+         layers_to_truncate = self.args.layers_to_truncate
+    
+         lrcn = LRCN(pretrained_model, embedding_size, hidden_size, vocab_size,
+                     layers_to_truncate)
+    
+         return lrcn
 
-
+    # TODO
     def sc(self): # main_notes line 71 fails without this
         # Make sure dataset returns labels
         self.dataset.set_label_usage(True)
