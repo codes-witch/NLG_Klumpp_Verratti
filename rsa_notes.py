@@ -6,7 +6,7 @@ import torch.nn.functional as F
 from os.path import join as pjoin
 from tqdm import tqdm
 
-from models.model_loader_reduced import ModelLoader
+from models.model_loader import ModelLoader
 from utils.data.data_prep_notes import DataPreparation
 from train.trainer_loader import TrainerLoader
 import utils.arg_parser
