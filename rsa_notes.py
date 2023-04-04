@@ -69,6 +69,9 @@ def get_args(argstring=None, verbose=True):
 
 
 class BirdDistractorDataset(object):
+    """
+    A class to build and manage the dataset with the CUB images. Allows to obtain partitions by attributes
+    """
 
     def __init__(self, cell_select_strategy=None, argstring=None, return_labels=True, randomized=True):
         """
@@ -606,87 +609,6 @@ class BirdDistractorDataset(object):
 
         return tokens
 
-    def get_captions_for_attribute(self, attr_ids, limit=5, print_ready=True):
-        # TODO not used?
-
-        # ORIGINAL COMMENTS
-        # attr_id: needs to be the "binary" attribute ID
-        # retrieve images that have the attribute
-        # attr_id: can be a number, OR a list of indices
-        imgs = []
-
-        for random_img_pos in range(self.attribute_matrix.shape[0]):
-            if self.randomized:
-                img_pos = self.random_idx_to_img_id[random_img_pos]
-            else:
-                img_pos = random_img_pos
-
-            attr_vec = self.attribute_matrix[random_img_pos, attr_ids]
-            if sum(attr_vec) >= 1:
-                imgs.append(img_pos)
-
-        img_cell = self.get_top_k_from_cell(imgs, max_cap_per_cell=limit)
-
-        # ORIGINAL COMMENTS
-        # get captions
-        # map from img_pos to img_id (strings)
-        img_ids = self.map_img_pos_to_img_id(img_cell)
-        print("img_ids:", img_ids)
-        img_name_to_caption = {}
-
-        for img_id in img_ids:
-            captions = self.get_caption_by_img_id(img_id, True)
-            img_name_to_caption[img_id] = captions
-
-        # we print it out
-        if print_ready:
-            for img_id, captions in img_name_to_caption.items():
-                print('img name: {}'.format(img_id))
-                for i, c in enumerate(captions):
-                    print(i, ":", c)
-
-                print()
-
-            return
-
-        return img_name_to_caption
-
-    def get_captions_for_segment(self, seg_id, limit=5, print_ready=True):
-        # TODO not used
-        focus_attr_ids = self.segments_to_attr_id[self.q_id_to_segments[seg_id]]
-
-        imgs = []
-
-        for random_img_pos in range(self.attribute_matrix.shape[0]):
-            if self.randomized:
-                img_pos = self.random_idx_to_img_id[random_img_pos]
-            else:
-                img_pos = random_img_pos
-
-            attr_vec = self.attribute_matrix[random_img_pos, focus_attr_ids]
-            if sum(attr_vec) >= 1:
-                imgs.append(img_pos)
-
-        img_cell = self.get_top_k_from_cell(imgs, max_cap_per_cell=limit)
-
-        img_ids = self.map_img_pos_to_img_id(img_cell)
-        img_name_to_caption = {}
-
-        for img_id in img_ids:
-            captions = self.get_caption_by_img_id(img_id, True)
-            img_name_to_caption[img_id] = captions
-
-        if print_ready:
-            for img_id, captions in img_name_to_caption.items():
-                print('img name: {}'.format(img_id))
-                for i, c in enumerate(captions):
-                    print(i, ":", c)
-
-                print()
-
-            return
-
-        return img_name_to_caption
 
 def load_model(rsa_dataset, verbose=True):
 
@@ -725,7 +647,8 @@ class RSA(object):
     Step 1: add image prior: + log P(i) to the row
     Step 2: Column normalize
     - Pragmatic Listener L1: L1(i|c) \propto S0(c|i) P(i)
-    Step 3: Multiply the full matrix by rationality parameter (0, infty), when rationality=1, no changes (similar to temperature)
+    Step 3: Multiply the full matrix by rationality parameter (0, infty), when rationality=1, no changes (similar to
+    temperature)
     Step 4: add speaker prior: + log P(c_t|i, c_<t) (basically add the original literal matrix) (very easy)
             OR add a unconditioned speaker prior: + log P(c) (through a language model, like KenLM)
     Step 5: Row normalization
@@ -733,66 +656,6 @@ class RSA(object):
 
     The reason for additions is e^{\alpha log L1(i|c) + log p(i)}, where \alpha is rationality parameter
     """
-
-    def __init__(self):
-        # can be used to add KenLM language model
-        # The "gigaword" one takes too long to load
-        pass
-
-    def build_literal_matrix(self, orig_logprob, distractor_logprob):
-        """
-        :param orig_logprob: [n_sample]
-        :param distractor_logprob: [num_distractors, n_sample]
-        :return: We put orig_logprob as the FIRST row
-                [num_distractors+1 , n_sample]
-
-        TODO this has no usages?
-        """
-        return torch.cat([orig_logprob.unsqueeze(0), distractor_logprob], dim=0)
-
-    def compute_pragmatic_speaker(self, literal_matrix,
-                                  rationality=1.0, speaker_prior=False, lm_logprobsf=None,
-                                  return_diagnostics=False):
-        """
-        Do the normalization over logprob matrix
-
-        literal_matrix: [num_distractor_images+1, captions]
-
-        :param literal_matrix: should be [I, C]  (num_images, num_captions)
-                               Or [I, Vocab] (num_images, vocab_size)
-        :param speaker_prior: turn on, we default to adding literal matrix
-        :param speaker_prior_lm_mat: [I, Vocab] (a grammar weighting for previous tokens)
-
-        :return:
-               A re-weighted matrix [I, C/Vocab]
-
-        TODO has no usages? All comments are ORIGINAL
-        """
-
-        # S0 is the literal matrix. No pragmatic knowledge
-        s0 = literal_matrix.clone()
-
-        norm_const = logsumexp(literal_matrix, dim=0, keepdim=True)
-        l1 = literal_matrix.clone() - norm_const
-        # step 3
-        l1 *= rationality
-        # step 4
-        if speaker_prior:
-            # we add speaker prior
-            # this needs to be a LM with shared vocabulary
-            if lm_logprobsf is not None:
-                s1 = l1 + lm_logprobsf[0]
-            else:
-                s1 = l1 + s0 # NOTE cost
-        # step 5
-        norm_const = logsumexp(s1, dim=1, keepdim=True)  # row normalization
-        s1 = s1 - norm_const
-
-        if return_diagnostics:
-            return s1, l1, s0
-
-        return s1
-
     def compute_entropy(self, prob_mat, dim, keepdim=True):
         """
         Returns the entropy for the given probability matrix.
@@ -811,7 +674,9 @@ class RSA(object):
         """
         Parameters:
             -   literal_matrix: matrix for the literal speaker
-            -   The number of images in the same cell
+            -   num_similar_images: The number of images in the same cell
+            -   Speaker prior: whether we are applying the prior probability of the caption given by a speaker
+            -   lm_logprobs: language model that assigns a logprob to a caption
             -   rationality: RSA rationality hyperparameter (in the paper, alpha)
             -   speaker_prior: whether there is a non-flat prior over images
 
@@ -840,9 +705,9 @@ class RSA(object):
         # weighing utility functions with entropy_penalty_alpha (in the paper, beta)
         utility = (1 - entropy_penalty_alpha) * utility_1 + entropy_penalty_alpha * utility_2
 
+        # apply rationality
         s1 = utility * rationality
 
-        # apply rationality
         if speaker_prior:
             # multiplication is summation in log-space. Here the prior is added (if it is not flat).
             # Otherwise, if is flat, so we get the logprob directly from lm_logprobsf
@@ -853,11 +718,6 @@ class RSA(object):
 
         if return_diagnostics:
             # If return_diagnostics, we should return intermediate calculations
-
-            # ORIGINAL COMMENTS:
-            # We return RSA-terms only; on the outside (Debugger), we re-assemble for snapshots of computational process
-            # s0, L1, u1, L1*, u2, u1+u2, s1
-            # mat, vec, vec, mat, vec, vec, vec
             return s0_mat, l1_mat, utility_1, l1_qud_mat, entropy, utility_2, utility, s1 - logsumexp(s1, dim=1,
                                                                                                       keepdim=True)
         # Normalize one last time and return pragmatic speaker
@@ -866,19 +726,21 @@ class RSA(object):
 
 class IncRSA(RSA):
     """
-    Class extending RSA
+    Class extending RSA. Carries out the processing of the images and then applies the RSA methods for sentence
+    generation
     """
     def __init__(self, model, rsa_dataset, lm_model=None):
         """
-        Sets
+        Sets the necessary instance variables for the class
         """
         super().__init__()
         self.model = model
         self.rsa_dataset = rsa_dataset
 
         args = self.rsa_dataset.args
-
+        # load the trainer for the model in use
         trainer_creator = getattr(TrainerLoader, args.model)
+        # model will be used for evaluation
         evaluator = trainer_creator(args, model, rsa_dataset.split_to_data['val'], [],
                                     None, rsa_dataset.device)
         evaluator.train = False
@@ -887,36 +749,33 @@ class IncRSA(RSA):
         self.device = self.evaluator.device
 
     def sentence_decode(self, sampled_ids):
+        """
+        Parameters:
+            sampled_ids: ids sampled from the generated sentences (from pragmatic/semantic speaker)
+
+        Returns:
+            a list of strings, each of which is a caption
+
+        """
         outputs = sampled_ids
         vocab = self.evaluator.dataset.vocab
 
-
         generated_captions = []
+
+        # outputs contains lists of indices, each corresponding to a sentence
         for out_idx in range(len(outputs)):
             sentence = []
+            # for each index in the sentence, consult the vocabulary and obtain the corresponding word
             for w in outputs[out_idx]:
                 word = vocab.get_word_from_idx(w.data.item())
+                # if we have not reached the end,
                 if word != vocab.end_token:
                     sentence.append(word)
                 else:
                     break
             generated_captions.append(' '.join(sentence))
-
+        # return a list with all the captions
         return generated_captions
-
-    # def semantic_speaker_from_features(self, image_input, labels):
-    #     image_input = image_input.to(self.device)
-    #
-    #     sample_ids = self.model.generate_sentence(image_input, self.evaluator.start_word,
-    #                                               self.evaluator.end_word, labels, labels_onehot=None,
-    #                                               max_sampling_length=50, sample=False)
-    #
-    #     # if only one ID was passed, we have a 1-dimensional tensor which sentence_decode can't handle
-    #     if len(sample_ids.shape) == 1:
-    #         # make the sample_ids 2-dimensional
-    #         sample_ids = sample_ids.unsqueeze(0)
-    #
-    #     return self.sentence_decode(sample_ids)
 
     def semantic_speaker(self, image_id_list=[], decode_strategy="greedy", image_input=None, labels=None):
         """
@@ -925,7 +784,6 @@ class IncRSA(RSA):
             -   decode_strategy: can only be greedy in the current implementation
         """
         # image_id here is a string!
-
         if image_input is None and labels is None:
             # get the image features and their labels
             image_input, labels = self.rsa_dataset.get_batch(image_id_list)
@@ -946,59 +804,29 @@ class IncRSA(RSA):
 
         return self.sentence_decode(sample_ids)
 
-    #
-    # def greedy_pragmatic_speaker(self, img_id, question_id, rationality,
-    #                              speaker_prior, entropy_penalty_alpha,
-    #                              max_cap_per_cell=5, cell_select_strategy=None,
-    #                              no_similar=False, verbose=True, return_diagnostic=False, segment=False,
-    #                              subset_similarity=False):
-    #     # collect_stats: debug mode (or eval mode); collect RSA statistics to understand internal workings
-    #     # TODO only called in the debugger - not really used
-    #     if max_cap_per_cell == 0:
-    #         return self.semantic_speaker([img_id], decode_strategy="greedy")
-    #
-    #     dis_cell, sim_cell, quality = self.rsa_dataset.get_cells_by_partition(img_id, question_id, max_cap_per_cell,
-    #                                                                           cell_select_strategy,
-    #                                                                           no_similar=no_similar,
-    #                                                                           segment=segment,
-    #                                                                           subset_similarity=subset_similarity)
-    #
-    #     image_id_list = [img_id] + sim_cell + dis_cell
-    #     with torch.no_grad():
-    #         if not return_diagnostic:
-    #             captions = self.greedy_pragmatic_speaker_free(image_id_list, len(sim_cell),
-    #                                                           rationality, speaker_prior, entropy_penalty_alpha)
-    #         else:
-    #             captions, diags = self.greedy_pragmatic_speaker_free(image_id_list, len(sim_cell),
-    #                                                                  rationality, speaker_prior, entropy_penalty_alpha,
-    #                                                                  return_diagnostic=True)
-    #
-    #     if return_diagnostic:
-    #         return captions[0], quality, diags
-    #
-    #     return captions[0], quality
-
     def fill_list(self, items, lists):
         # ORIGINAL COMMENT: this is a pass-by-reference update
         for item, ls in zip(items, lists):
+            # append item to list at its same index
             ls.append(item)
 
     def greedy_pragmatic_speaker_free(self, image_id_list, num_sim, rationality,
                                       speaker_prior, entropy_penalty_alpha, lm_logprobsf=None,
                                       max_sampling_length=50, sample=False, return_diagnostic=False):
         """
-        ORIGINAL COMMENTS: {
+        ORIGINAL COMMENTS:
             We always assume image_id_list[0] is the target image
             image_id_list[:num_sim] are the within cell
             image_id_list[num_sim:] are the distractors
-        }
 
+        OUR COMMENTS
         Parameters
             -   image_id_list: a list of image IDs where the first one is the target and the rest are similar or dissimilar
             images
             -   num_sim: int stating how many similar images are in the list
             -   rationality: RSA rationality hyperparameter
-            -   speaker_prior: prior over images TODO not sure
+            -   speaker_prior: whether we are using a speaker prior probability for the caption
+            -   lm_logprobs: logprobs assigned to captions by a given language model
             -   max_sampling_length: integer for maximum length of the caption
             -   sample: whether we will decode greedily or sample from predicted distribution
             -   return_diagnostic: whether we wish to obtain intermediate values from the RSA computation
@@ -1013,7 +841,6 @@ class IncRSA(RSA):
         # image features and class labels
         image_input, labels = self.rsa_dataset.get_batch(image_id_list)
         image_inputs = image_input.to(self.device)
-
 
         # set start and end words
         start_word = self.evaluator.start_word
@@ -1093,10 +920,6 @@ class IncRSA(RSA):
                                [s0_list, l1_list, u1_list, l1_qud_list, entropy_list, u2_list, u_list, s1_list])
 
             # ORIGINAL COMMENTS:
-            # pragmatic_array:
-            # torch.Size([1, 3012])
-
-            # ORIGINAL COMMENTS:
             # pragmatic array becomes the computational output,
             # but we need to repeat it for all
             # beam search / diverse beam search this part is easier to handle.
@@ -1124,6 +947,7 @@ class IncRSA(RSA):
             embedded_word = self.model.word_embed(predicted)
             embedded_word = embedded_word.unsqueeze(1)
 
+            # add one to current sampling length
             i += 1
 
         sampled_ids = torch.cat(sampled_ids, 1).squeeze()
@@ -1147,12 +971,6 @@ if __name__ == '__main__':
     # rsa_dataset.attribute_matrix[0, 117]
     # rsa_dataset.attribute_matrix[[0, 2, 3], 117]
 
-
-    # import IPython
-    #
-    # IPython.embed()
-
-    # pdb.set_trace()
 
     model = load_model(rsa_dataset)
     incr = IncRSA(model, rsa_dataset)
