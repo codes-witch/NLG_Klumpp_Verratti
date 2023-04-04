@@ -282,100 +282,6 @@ class KeywordClassifier(object):
         return False
 
 
-class KeywordExtractor(object):
-    """
-    Actually, this is quite powerful
-    """
-
-    def __init__(self, rsa_dataset):
-        self.rsa_dataset = rsa_dataset
-        self.X_words, self.img_ids = self.build_dataset()
-        self.vectorizer = CountVectorizer(ngram_range=(1, 2))
-
-        self.X = self.vectorizer.fit_transform(self.X_words)
-        self.vocab = self.vectorizer.get_feature_names()
-
-    def build_dataset(self):
-        X_words = []
-        img_ids = []
-        for img_id, split in self.rsa_dataset.image_id_to_split.items():
-            img_ids.append(img_id)
-            label = [0.] * len(self.rsa_dataset.q_id_to_segments)
-
-            caption_list = self.rsa_dataset.get_caption_by_img_id(img_id, True)
-            # we concat 5 captions into ONE
-            total_caption = " </s> ".join(caption_list)
-            X_words.append(total_caption)
-
-            # get y-label
-            img_pos = self.rsa_dataset.filename_to_cub_img_id[img_id]
-            random_img_pos = self.rsa_dataset.img_id_to_random_idx[img_pos]
-
-            attr_vec = self.rsa_dataset.attribute_matrix[random_img_pos, :]
-            for seg_label, attr_ids in self.rsa_dataset.segments_to_attr_id.items():
-                if sum(attr_vec[attr_ids]) >= 1:
-                    label_idx = self.rsa_dataset.q_id_to_segments.index(seg_label)
-                    label[label_idx] = 1.
-
-        return X_words, img_ids
-
-    def print_attr_for_key(self, keyword):
-        focus_att_ids = [i for i in range(len(self.rsa_dataset.attr_vocab_ls)) if
-                         keyword in self.rsa_dataset.attr_vocab_ls[i]]
-        for att_id in focus_att_ids:
-            print(self.rsa_dataset.attr_vocab_ls[att_id])
-
-    def collect_captions_for_key(self, key_word):
-        # this would partition a dataset given a keyword
-        # we will get indices over attributes that contain that keywords
-        # then divide the dataset in half for it
-        # get unigram, and then do it
-        # we return a Y-label for it
-
-        focus_att_ids = [i for i in range(len(self.rsa_dataset.attr_vocab_ls)) if
-                         key_word in self.rsa_dataset.attr_vocab_ls[i]] # gets attr ids that match keyword
-
-        y = []
-        # we iterate through the img_id!
-        for img_id in self.img_ids:
-            # get y-label
-            img_pos = self.rsa_dataset.filename_to_cub_img_id[img_id]
-            random_img_pos = self.rsa_dataset.img_id_to_random_idx[img_pos]
-            attr_vec = self.rsa_dataset.attribute_matrix[random_img_pos, :]
-
-            if sum(attr_vec[focus_att_ids]) >= 1:
-                y.append(1)
-            else:
-                y.append(0)
-
-        return np.array(y)
-
-    def get_top_keywords_for(self, attr_word, top=20):
-        # we compose a dataset, train a lasso over unigram
-        # hopefully this all is fast enough...otherwise we'll just do some tf-idf stuff
-        y = self.collect_captions_for_key(attr_word)
-        print("positive class percentage: {}".format(y.mean()))
-        if y.mean() > 0.9:
-            print("Warning: too imbalanced, do not use")
-
-        reg = linear_model.LogisticRegression(fit_intercept=True, penalty='l1', solver='saga',
-                                              max_iter=100)
-        reg.fit(self.X, y)
-        y_hat = reg.predict(self.X)
-        print(metrics.classification_report(y, y_hat, digits=3))
-        print("Accuracy: ", metrics.accuracy_score(y, y_hat))
-
-        _, coords = np.nonzero(reg.coef_)
-        print("Number of non-zero words: {}".format(len(coords)))
-        word_coeff = []
-        for c in coords:
-            word_coeff.append((self.vocab[c], reg.coef_[0, c]))
-
-        word_coeff = sorted(word_coeff, key=lambda x: x[1], reverse=True)[:top]
-
-        return word_coeff
-
-
 if __name__ == '__main__':
     nltk.download('stopwords')
     rsa_dataset = BirdDistractorDataset()
@@ -383,4 +289,3 @@ if __name__ == '__main__':
 
     print(classy.organ_name_to_aspect_name)
 
-    ex = KeywordExtractor(rsa_dataset)
