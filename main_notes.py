@@ -4,7 +4,7 @@ import json
 
 import sys 
 
-from models.model_loader_reduced import ModelLoader
+from models.model_loader import ModelLoader
 from train.trainer_loader import TrainerLoader
 from utils.data.data_prep_notes import DataPreparation
 import utils.arg_parser
@@ -102,7 +102,7 @@ if __name__ == '__main__':
         print("Evaluating ...")
         vars(args)['num_epochs'] = 1
 
-    # NOTE: The following loop goes throught the specified number of epochs, either training and evaluating or only
+    # NOTE: The following loop goes through the specified number of epochs, either training and evaluating or only
     # evaluating
 
     # Start training/evaluation
