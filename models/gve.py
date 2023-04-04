@@ -37,7 +37,7 @@ class GVE(LRCN):
 
     def get_labels_append_func(self, labels, labels_onehot):
         """
-        return a function that can be used as feat_func in lrcn.forward(), but that makes sure that labels are
+        return a function that can be used as feat_func in gve.forward(), but that makes sure that labels are
          concatenated to the image features 'labels' are the labels, 'labels_onehot' is a one-hot representation of them
         """
         # if there is no one-hot representation yet, create one
