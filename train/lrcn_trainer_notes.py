@@ -1,7 +1,7 @@
 import os
 
 import torch
-import torch.nn as nnche
+import torch.nn as nn
 from torch.nn.utils.rnn import pack_padded_sequence
 import numpy as np
 
