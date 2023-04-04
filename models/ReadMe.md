@@ -41,3 +41,17 @@ corresponding methods of the base class, which are then called without modificat
 the same for both LCRN and GVE, but GVE requires the classes to be appended to the image features after the latter have 
 gone through a linear and a ReLU layer. <!-- TODO go over phrasing-->
 
+### Sentence Classifier
+
+The sentence classifier's main contents correspond to a forward pass. This consists of an embedding layer for the 
+captions, an LSTM and a subsequent linear layer. This architecture is the one defined by Hendricks et al.
+
+In addition, the file contains functions for initializing weights and for returning the state dictionary corresponding 
+to the current model. 
+
+### Pretrained Models
+
+This file is used for loading pretrained computer vision models from Torchvision. The code accepts VGG and ResNet models.
+Apart from allowing us to obtain the pretrained models, the `PretrainedModels` class lets us optionally truncate the last 
+fully-connected layers of the models we are loading.
+
