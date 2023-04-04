@@ -7,6 +7,11 @@ from torch.nn.utils.rnn import pad_packed_sequence
 from .pretrained_models import PretrainedModel
 
 class SentenceClassifier(nn.Module):
+    """
+    Initialized the SentenceClassifier model, defines forward pass and state dictionary.
+
+    The Sentence Classifier is needed for the GVE model. It returns logits over bird species given a caption.
+    """
     def __init__(self, word_embed_size, hidden_size, vocab_size, num_classes,
             dropout_prob=0.5):
         super(SentenceClassifier, self).__init__()
