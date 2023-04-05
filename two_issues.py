@@ -136,7 +136,7 @@ def generate_caption_for_test_two_issues(save_file_prefix, max_cap_per_cell=400,
 
 def generate_literal_caption_for_test_two_issues(save_file_prefix):
     """
-        Modified from generate_literal_caption_for_test() in evaluation.py. This works exactly identical,
+        Modified from generate_literal_caption_for_test() in evaluation.py. This works exactly identically,
         except that it returns a dictionary of nested dictionaries instead of a dictionary of simple dictionaries.
 
         Generates literal speaker captions for the images of the test set. Generates Json file with a dictionary
