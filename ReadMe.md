@@ -12,8 +12,8 @@ Most code has been written by the original authors. The code we have written can
 and `issue_alignment.py`. We have also extended the `evaluation_notes.py` file to generate captions for the literal speaker
 S0_AVG, which is mentioned in the paper but not implemented in the original repository. In said file, we have included
 two alternative ways of calculating S0_AVG: one is more true to the theoretical description of S0_AVG in the original 
-paper and the other one yields results that are closer to those reported by Nie et al. The latter is the one that 
-remains uncommented. For further discussion, refer to the report.  
+paper and the other one yields results that are closer to those reported by Nie et al. The latter is the one that is 
+active in the current code. For further discussion, refer to the report.  
 
 ### Evaluation
 
