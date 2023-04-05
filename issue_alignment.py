@@ -11,12 +11,15 @@ from evaluation_notes import BirdDistractorDataset
 from rsa_eval import KeywordClassifier
 
 
-# evaluate issue alignment for all captions in a file
-# this weights all image-issue pairs equally (in contrast to evaluate_captions_by_image(), which calculates the 
-# average precision and recall for each image individually)
 def evaluate_captions(path):
+    """
+    Method to evaluate issue alignment for all captions in a file
+    
+    This weights all image-issue pairs equally, in contrast to evaluate_captions_by_image().
 
-    # instantiate the keyword classifier
+    """
+
+    # instantiate the dataset and keyword classifier
     rsa_dataset = BirdDistractorDataset(randomized=True)
     kc = KeywordClassifier(rsa_dataset)
 
@@ -66,12 +69,13 @@ def evaluate_captions(path):
     return precision, recall, f1_score
 
 
-# alternative evaluation method
-# here, image-issue pairs are not weighted equally, but instead, precision, recall, and F1 score are calculated 
-# for each image and then averaged
 def evaluate_captions_by_image(path):
+    """
+    Alternative evaluation method, where image-issue pairs are not weighted equally, but instead, precision, 
+    recall, and F1 score are calculated for each image and then averaged
+    """
 
-    # instantiate the keyword classifier
+    # instantiate the dataset and keyword classifier
     rsa_dataset = BirdDistractorDataset(randomized=True)
     kc = KeywordClassifier(rsa_dataset)
 
@@ -118,7 +122,12 @@ def evaluate_captions_by_image(path):
 
         # if there is at least one resolvable issue for the image, calculate precision, recall, and F1 score
         if len(captions[img])>0:
-            precisions.append(sum_true_pos/(sum_true_pos+sum_false_pos))
+            # if sum_true_pos==0 and sum_false_pos!=0, the precision is 0
+            # if both sum_true_pos==0 and sum_false_pos==0, we set the precision to 0 as well (although it cannot be properly calculated)
+            if sum_true_pos > 0:
+                precisions.append(sum_true_pos/(sum_true_pos+sum_false_pos))
+            else:
+                precisions.append(0)
             recalls.append(sum_true_pos/(sum_true_pos+sum_false_neg))
             f1_scores.append(2 * sum_true_pos / (2 * sum_true_pos + sum_false_pos + sum_false_neg))
 
@@ -138,16 +147,30 @@ def evaluate_captions_by_image(path):
 
 if __name__ == '__main__':
 
-    # get scores for all conditions
-    # the default condition is equal weighting of all image-issue pairs
-    # for equal weighting of all images, change to evaluate_captions_by_image()
+    # get scores for all conditions for equal weighting of image-issue pairs
     s0 = evaluate_captions("./results/random_run_0/S0_gen_captions.json")
     s1 = evaluate_captions("./results/random_run_1/S1_gen_captions.json")
     s1c = evaluate_captions("./results/random_run_2/S1_C_gen_captions.json")
-    s1ch = evaluate_captions("./results/random_run_3/S1_CH_gen_captions.json")
+    s1ch = evaluate_captions("./results/random_run_3/S1_CH_wide_gen_captions.json")
+    s0avg = evaluate_captions("./results/random_run_4/S0_AVG_gen_captions.json")
 
     # print scores
-    for s, s_name in zip([s0, s1, s1c, s1ch], ["S0", "S1", "S1_C", "S1_CH"]):
+    for s, s_name in zip([s0, s1, s1c, s1ch, s0avg], ["S0", "S1", "S1_C", "S1_CH", "S0_AVG"]):
+        print(s_name)
+        print("Precision: " + str(s[0]))
+        print("Recall: " + str(s[1]))
+        print("F1 Score: " + str(s[2]))
+                                                      
+    # alternative method of score calculation
+    s0_alt = evaluate_captions_by_image("./results/random_run_0/S0_gen_captions.json")
+    s1_alt = evaluate_captions_by_image("./results/random_run_1/S1_gen_captions.json")
+    s1c_alt = evaluate_captions_by_image("./results/random_run_2/S1_C_gen_captions.json")
+    s1ch_alt = evaluate_captions_by_image("./results/random_run_3/S1_CH_wide_gen_captions.json")
+    s0avg_alt = evaluate_captions_by_image("./results/random_run_4/S0_AVG_gen_captions.json")
+
+
+    # print scores
+    for s, s_name in zip([s0_alt, s1_alt, s1c_alt, s1ch_alt, s0avg_alt], ["S0", "S1", "S1_C", "S1_CH", "S0_AVG"]):
         print(s_name)
         print("Precision: " + str(s[0]))
         print("Recall: " + str(s[1]))
