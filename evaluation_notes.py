@@ -29,8 +29,7 @@ def get_args(argstring=None, verbose=False):
 
 class CUBPartitionDataset(object):
     """
-    A class to manage partitions of the CUB dataset.
-
+    A class to help manage partitions of the CUB dataset.
     Uses the following instance variables:
         From parameters:
         -   cell_select_strategy: No bearing in the current implementation.
@@ -47,6 +46,7 @@ class CUBPartitionDataset(object):
         Maps ID -> index
         -   issue_vocab: List of all the 17 issue names. Maps the indices of the matrix columns to the issue name.
     """
+
     def __init__(self, cell_select_strategy=None, argstring=None, return_labels=True):
         """
         Set all instance variables (see class description)
@@ -56,7 +56,7 @@ class CUBPartitionDataset(object):
 
         self.args = args = get_args(argstring)
         self.device = torch.device('cuda:{}'.format(args.cuda_device) if
-                                            torch.cuda.is_available() and not args.disable_cuda else 'cpu')
+                                   torch.cuda.is_available() and not args.disable_cuda else 'cpu')
 
         self.image_folder = './data/cub/'
 
@@ -143,7 +143,6 @@ class CUBPartitionDataset(object):
 
 def generate_caption_for_test(save_file_prefix, max_cap_per_cell=40, rationality=20, entropy_penalty_alpha=0.4,
                               no_retry=False, no_similar=False, s_avg=False):
-
     """
     Generates pragmatic speaker captions for the images of the test set. Generates Json files with dictionaries
 
@@ -197,14 +196,19 @@ def generate_caption_for_test(save_file_prefix, max_cap_per_cell=40, rationality
                 sim_cell2 = []
 
             # OWN CODE!
-            if s_avg: # average all features of similar images and call semantic speaker with the result
-                img_features, labels = rsa_dataset.get_batch(sim_cell2)
-                _, label = rsa_dataset.get_batch([imgid])
-                avg = img_features.mean(dim=0, keepdim=True)
+            if s_avg:
+                # in the commented-out code below, we average all features of similar images and call semantic speaker
+                # with the result.
 
-                # print(avg)
+                # img_features, labels = rsa_dataset.get_batch(sim_cell2)
+                # _, label = rsa_dataset.get_batch([imgid])
+                # avg = img_features.mean(dim=0, keepdim=True)
+                # cap = rsa_model.semantic_speaker(image_input=avg, labels=label)[0]
 
-                cap = rsa_model.semantic_speaker(image_input=avg, labels=label)[0]
+                # here, we pass all similar images to the semantic speaker together.
+                cap = rsa_model.semantic_speaker(sim_cell2)[0]
+
+                # for differences between the two options above, see report for discussion.
 
             else:
                 # Get the caption for current issue for current image. This handles all types of pragmatic speaker:
@@ -221,8 +225,9 @@ def generate_caption_for_test(save_file_prefix, max_cap_per_cell=40, rationality
             img_id_to_partition_idx[imgid][issue_id] = [dis_indices, sim_indices]
 
     # Save the populated dictionaries in respective Json files
-    json.dump(img_id_to_caption, open(save_file_prefix+"_gen_captions.json", 'w'))
-    json.dump(img_id_to_partition_idx, open(save_file_prefix+"_sampled_partitions.json", 'w'))
+    json.dump(img_id_to_caption, open(save_file_prefix + "_gen_captions.json", 'w'))
+    json.dump(img_id_to_partition_idx, open(save_file_prefix + "_sampled_partitions.json", 'w'))
+
 
 def generate_literal_caption_for_test(save_file_prefix):
     """
@@ -264,25 +269,27 @@ def generate_literal_caption_for_test(save_file_prefix):
     # Once populated, save the dictionary in a JSON file
     json.dump(img_id_to_caption, open(save_file_prefix + "_gen_captions.json", 'w'))
 
+
 if __name__ == '__main__':
-    # both S1-Q, and S1-QH get "retry"
     parser = argparse.ArgumentParser()
-    parser.add_argument('--rationality', type=float, default=10, help="raitionality")
-    parser.add_argument('--entropy', type=float, default=0.4, help="raitionality")
+    parser.add_argument('--rationality', type=float, default=10, help="rationality")
+    parser.add_argument('--entropy', type=float, default=0.4, help="rationality")
     parser.add_argument('--max_cell_size', type=int, default=40, help="cell size")
 
     parser.add_argument('--exp_num', type=int, help="which evaluation experiment to run; this helps parallelization")
     parser.add_argument('--root_dir', type=str, default="./results/", help="format is ./results/{}, no slash aft+er")
     parser.add_argument('--file_prefix', type=str, default="{}", help="prefix hyperparameter for the run")
-    parser.add_argument('--run_time', type=int, default=4, help="format is ./results/{}, no slash after")
+    parser.add_argument('--run_time', type=int, default=5, help="format is ./results/{}, no slash after")
     args = parser.parse_args()
 
-    time = args.exp_num
+    # This will run by default all experiments (S0, S1, S1_C, S1_C+H, and S0_Avg)
 
-    # If one wishes to only run one experiment, set the number in the parameter (--exp_num)
+    # If one wishes to only run one experiment, uncomment the code below and set the experiment number in the
+    # parameter (--exp_num). Comment out the for-loop at the bottom of the file.
     # The rationality has been hardcoded to be the one used in the paper for each experiment,
-    # but it can easily be changed
+    # but it can easily be changed.
 
+    # time = args.exp_num
     # os.makedirs(pjoin(args.root_dir, "random_run_{}".format(time), "test.txt"), exist_ok=True)
     # save_dir = pjoin(args.root_dir, "random_run_{}".format(time))
     #
@@ -294,22 +301,18 @@ if __name__ == '__main__':
     #                               rationality=3,
     #                               entropy_penalty_alpha=0, no_similar=True)
     # if args.exp_num == 2:
-    #     generate_caption_for_test(save_dir + "/S1_Q", max_cap_per_cell=args.max_cell_size,
+    #     generate_caption_for_test(save_dir + "/S1_C", max_cap_per_cell=args.max_cell_size,
     #                               rationality=10,
     #                               entropy_penalty_alpha=0)
     #
     # if args.exp_num == 3:
-    #     generate_caption_for_test(save_dir + "/S1_QH", max_cap_per_cell=args.max_cell_size,
+    #     generate_caption_for_test(save_dir + "/S1_CH", max_cap_per_cell=args.max_cell_size,
     #                               rationality=10,
     #                               entropy_penalty_alpha=args.entropy)
     #
     # if args.exp_num == 4:
     #     generate_caption_for_test(save_dir + "/S0_AVG", s_avg=True)
 
-    # If you wish to run all experiments in one run, uncomment the code below and comment out the one above. Set
-    # run_time = 5 to run all four experiments.
-
-    # TODO remove hard-coded rationalities
     for time in range(args.run_time):
 
         args.exp_num = time
@@ -328,8 +331,8 @@ if __name__ == '__main__':
             # manually set rationality to replicate paper
             args.rationality = 3
             generate_caption_for_test(save_dir + "/S1", max_cap_per_cell=args.max_cell_size,
-                                              rationality=args.rationality,
-                                              entropy_penalty_alpha=0, no_similar=True)
+                                      rationality=args.rationality,
+                                      entropy_penalty_alpha=0, no_similar=True)
 
         # Generate issue-sensitive pragmatic speaker captions (S1_C)
         if args.exp_num == 2:
@@ -347,6 +350,6 @@ if __name__ == '__main__':
                                       rationality=args.rationality,
                                       entropy_penalty_alpha=args.entropy)
 
-        # Generate captions with S0_AVG
+        # Generate literal speaker with averages
         if args.exp_num == 4:
             generate_caption_for_test(save_dir + "/S0_AVG", s_avg=True)
