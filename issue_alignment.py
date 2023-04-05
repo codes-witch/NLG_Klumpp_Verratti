@@ -168,7 +168,6 @@ if __name__ == '__main__':
     s1ch_alt = evaluate_captions_by_image("./results/random_run_3/S1_CH_gen_captions.json")
     s0avg_alt = evaluate_captions_by_image("./results/random_run_4/S0_AVG_gen_captions.json")
 
-
     # print scores
     for s, s_name in zip([s0_alt, s1_alt, s1c_alt, s1ch_alt, s0avg_alt], ["S0", "S1", "S1_C", "S1_CH", "S0_AVG"]):
         print(s_name)
