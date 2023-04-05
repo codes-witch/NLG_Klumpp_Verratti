@@ -2,8 +2,8 @@ import nltk
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 import string
-from rsa_notes import IncRSA, BirdDistractorDataset
-from rsa_notes import load_model
+from rsa import IncRSA, BirdDistractorDataset
+from rsa import load_model
 
 puncs = set(string.punctuation)
 en_stopwords = set(stopwords.words('english'))

@@ -9,7 +9,7 @@ import numpy as np
 import json
 
 from rsa_eval import load_inc_rsa_model
-from rsa_notes import BirdDistractorDataset
+from rsa import BirdDistractorDataset
 
 def get_args(argstring=None, verbose=False):
     """

@@ -9,7 +9,8 @@ data, please follow this link: TODO
 ## Files
 
 Most code has been written by the original authors; however, we have considerably reduced it by deleting functions that 
-were not used for our purposes. 
+were not used for our purposes. The original code is hosted in [this repository](https://github.com/windweller/Pragmatic-ISIC/).
+The authors also mention that the CUB captioning model is modified from https://github.com/salaniz/pytorch-gve-lrcn.
 
 The code we have written can be found in the files `two_issues.py` and `issue_alignment.py`. We have also extended the 
 `evaluation_notes.py` file to generate captions for the literal speaker
@@ -80,6 +81,11 @@ python3 main.py --model sc --dataset cub
 ```
 
 ### RSA
+
+`rsa.py` contains three classes: BirdDistractorDataset, RSA and IncrRSA. 
+
+`BirdDistractorDataset` allows us to manage the dataset with CUB images, load all the data related to class labels, 
+attributes
 
 ### Two issues
 
