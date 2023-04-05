@@ -3,8 +3,37 @@
 The code for the full training, sentence generation and evaluation can be found here. 
 
 ## Setup
-Before running, download the CUB  data and the best training checkpoint using the `rsa-file-setup.sh` file. For the COCO
-data, please follow this link: TODO
+
+The following installation guide has been taken from the Salaniz repo.
+
+1. Clone the repository
+```shell
+git clone https://github.com/codes-witch/NLG_Klumpp_Verratti.git
+cd NLG_Klumpp_Verratti
+```
+2. Create conda environment
+```shell
+conda env create -f environment.yml
+```
+3. Activate environment
+```shell
+conda activate gve-lrcn
+```
+
+4. Download pre-trained model and data (Note: For the COCO data, please follow this link: https://cocodataset.org/#download )
+
+TODO CHECK WHAT NEEDS TO BE DOWNLOADED
+
+```bash
+sh rsa-file-setup.sh 
+```
+
+5. Install other packages
+
+```bash
+pip install -r requirements.txt
+```
+
 
 ## Files
 
@@ -49,6 +78,8 @@ python3 caption_generation.py --exp_num <experiment_number>
 where `<experiment_number>` refers to the number corresponding to the desired speaker agent as explained above.
 
 Note that this file was named `evaluation.py` in the original repository.
+
+
 ### RSA eval
 
 The `rsa_eval.py` file contains code that is used in `issue_alignment.py` and `two_issues.py` for determining whether 
@@ -85,8 +116,10 @@ python3 main.py --model sc --dataset cub
 
 `rsa.py` contains three classes: BirdDistractorDataset, RSA and IncrRSA. 
 
-`BirdDistractorDataset` allows us to manage the dataset with CUB images, load all the data related to class labels, 
-attributes
+`BirdDistractorDataset` allows us to manage the dataset with CUB images. It loads all the data related to class labels, 
+attributes, images, batches and issues and prepares it to be accessed. 
+
+`RSA` contains the code for computing TODO
 
 ### Two issues
 
