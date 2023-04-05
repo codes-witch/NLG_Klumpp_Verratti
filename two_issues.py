@@ -8,6 +8,9 @@ from rsa_eval import load_inc_rsa_model
 from rsa import BirdDistractorDataset
 from evaluation import CUBPartitionDataset
 
+# TODO: add comments
+# TODO: names "s1qm" etc. are maybe to be changed, also, S0 Avg is neither implemented nor run
+
 # based on generate_caption_for_test in evaluation.py, modified for two issues
 def generate_caption_for_test_two_issues(save_file_prefix, max_cap_per_cell=400, rationality=20, # max capacity is higher
                                          entropy_penalty_alpha=0.4, no_retry=False, no_similar=False,
