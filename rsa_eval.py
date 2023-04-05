@@ -28,6 +28,7 @@ def load_inc_rsa_model(rsa_dataset):
 
 class KeywordClassifier(object):
     def __init__(self, rsa_dataset):
+        # Original comment: TODO remove maybe (since it's below too)
         # we need:
         # 1. structure that is: {name: match_keywords}
         # 2. We go from organ -> aspect -> attributes
@@ -37,25 +38,34 @@ class KeywordClassifier(object):
 
         self.rsa_dataset = rsa_dataset
 
-        # organ first
+        # dictionary with synonyms of organ names
         self.organ_name_to_match_words = {}
-        # aspect second
+        # a nested dictionary, maps organ to possible aspect names and those aspect names to possible values
         self.organ_name_to_aspect_name = {}
+        # TODO
         self.attr_name_to_decomp = {}
         self.segment_name_to_decomp = {}
 
+        # i is an attribute id / index, seg_attr is an attribute name and value
         for i, seg_attr in enumerate(self.rsa_dataset.attr_vocab_ls):
-            a = seg_attr.split("::") # DANIELA Get list [segment, value]
-            b = a[0].split("_") # DANIELA Get list [verb bodypart (bodypart) noun]
-            organ_name = b[1] # DANIELA The second thing is always a body part excep in has_shape and has_size
+            # split to obtain a list [attribute, value]
+            a = seg_attr.split("::")
+            # split again to obtain a list ["has", bodypart, aspect] TODO: not always, right?
+            b = a[0].split("_")
+            # b[1] is always a body part except in has_shape and has_size
+            organ_name = b[1]
+            # for has_shape and has_size, there is no further distinction
             if len(b) == 2:
                 aspect_name = None
+            # for compound body part names upper_tail and under_tail, merge them, and take the last element as aspect name
             elif len(b) == 4:
                 aspect_name = b[3]
                 organ_name = b[1] + '_' + b[2]
+            # else: take the last element as aspect name
             else:
-                aspect_name = b[2] # DANIELA aspect is (color|pattern)
-            # aspect_name = b[2] if len(b) != 2 else None
+                aspect_name = b[2] # DANIELA aspect is (color|pattern) # TODO don't get what you mean
+
+            # TODO nothing done from here onwards yet
             self.attr_name_to_decomp[seg_attr] = (organ_name, aspect_name, a[1]) # DANIELA full string to triple (organ,
                                                                                     # aspect, value)
             self.segment_name_to_decomp[seg_attr.split("::")[0]] = (organ_name, aspect_name) #
