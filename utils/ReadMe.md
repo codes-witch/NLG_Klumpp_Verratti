@@ -9,7 +9,7 @@ All documentation is ours unless explicitly stated otherwise (preceded by "Origi
 
 ### Data
 
-Contains the classes DataPreparation, CocoDataset, and CubDataset. These are used to set up and access the data
+Contains the classes `DataPreparation`, `CocoDataset`, and `CubDataset`. These are used to set up and access the data
 (images, captions, and labels).
 
 ### Tokenizer
@@ -21,16 +21,16 @@ directory, so both code and documentation are from the original.
 
 ### Arg Parser
 
-This file is needed for argument parsing when running main.py (for training or evaluation). The arguments are set
+This file is needed for argument parsing when running `main.py` (for training or evaluation). The arguments are set
 to default values or individual input values.
 
 ### Logger
 
-The logger is used in main.py for the logging.
+The logger is used in `main.py` for the logging.
 
 ### Misc
 
-This file contains a single helper method get_split_str(), which is used to convert the representation of the 
+This file contains a single helper method `get_split_str()`, which is used to convert the representation of the 
 data split (training, validation, or testing) from boolean to string type.
 
 ### Transform
