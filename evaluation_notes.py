@@ -165,8 +165,7 @@ def generate_caption_for_test(save_file_prefix, max_cap_per_cell=40, rationality
 
     # Get all image IDs for the test set
     test_ids = []
-    # TODO change test file name to test.txt!
-    with open(pjoin(cub_partition.image_folder, 'test_small.txt')) as f:
+    with open(pjoin(cub_partition.image_folder, 'test.txt')) as f:
         for line in f:
             test_ids.append(line.strip())
 
@@ -245,8 +244,7 @@ def generate_literal_caption_for_test(save_file_prefix):
     open(save_file_prefix + "_gen_captions.json", 'w').close()
 
     test_ids = []
-    # TODO change filename to test.txt!
-    with open(pjoin(cub_partition.image_folder, 'test_small.txt')) as f:
+    with open(pjoin(cub_partition.image_folder, 'test.txt')) as f:
         for line in f:
             test_ids.append(line.strip())
 
