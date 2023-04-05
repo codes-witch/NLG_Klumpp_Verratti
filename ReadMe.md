@@ -54,6 +54,12 @@ RSA dataset as a parameter. Then, one can use the method ``
 
 ### Issue alignment
 
+`issue_alignment.py` contains the code used to evaluate the issue alignment as described in the report. We included two different methods of score averaging: in one case, all image-issue pairs are weighted equally, in the other, scores are calculated for each image separately and averaged afterwards. Running `issue_alignment.py` calculates issue alignment scores (precision, recall, and F-score) for both and for all speaker agents (S0, S1, S1_C, S1_C+H, and S0_AVG) and print them to the screen.
+
 ### Main
 
 ### RSA
+
+### Two issues
+
+`two_issues.py` contains the code used to generate and evaluate captions for two issues. The code is modified from `evaluation_notes.py` and `issue_alignment.py`. Running `two_issues.py` generates captions for all test images in the CUB dataset and calculate issue alignment scores under different conditions. For a discussion of the general approach, the individual conditions, and the results, see the report.
