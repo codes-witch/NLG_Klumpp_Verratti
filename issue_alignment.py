@@ -151,7 +151,7 @@ if __name__ == '__main__':
     s0 = evaluate_captions("./results/random_run_0/S0_gen_captions.json")
     s1 = evaluate_captions("./results/random_run_1/S1_gen_captions.json")
     s1c = evaluate_captions("./results/random_run_2/S1_C_gen_captions.json")
-    s1ch = evaluate_captions("./results/random_run_3/S1_CH_wide_gen_captions.json")
+    s1ch = evaluate_captions("./results/random_run_3/S1_CH_gen_captions.json")
     s0avg = evaluate_captions("./results/random_run_4/S0_AVG_gen_captions.json")
 
     # print scores
@@ -165,7 +165,7 @@ if __name__ == '__main__':
     s0_alt = evaluate_captions_by_image("./results/random_run_0/S0_gen_captions.json")
     s1_alt = evaluate_captions_by_image("./results/random_run_1/S1_gen_captions.json")
     s1c_alt = evaluate_captions_by_image("./results/random_run_2/S1_C_gen_captions.json")
-    s1ch_alt = evaluate_captions_by_image("./results/random_run_3/S1_CH_wide_gen_captions.json")
+    s1ch_alt = evaluate_captions_by_image("./results/random_run_3/S1_CH_gen_captions.json")
     s0avg_alt = evaluate_captions_by_image("./results/random_run_4/S0_AVG_gen_captions.json")
 
 
