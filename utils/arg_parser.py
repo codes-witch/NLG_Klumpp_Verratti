@@ -3,10 +3,16 @@ import torch
 
 from models.pretrained_models import PretrainedModel
 
+"""
+Utility file to parse and print arguments from an argument string.
+"""
+
 def get_args(arg_str=None):
     parser = argparse.ArgumentParser()
 
-    # General arguments
+    # First, define the arguments with their type and default values
+
+    # Original comment: General arguments
     parser.add_argument('--data-path', type=str,
                         default='./data',
                         help="root path of all data")
@@ -14,7 +20,7 @@ def get_args(arg_str=None):
                         default='./checkpoints',
                         help="path checkpoints are stored or loaded")
     parser.add_argument('--log-step', type=int , default=10,
-                        help="step size for prining logging information")
+                        help="step size for printing logging information")
     parser.add_argument('--num-workers', type=int, default=4,
                         help="number of threads used by data loader")
 
@@ -26,7 +32,7 @@ def get_args(arg_str=None):
                         help="set a torch seed")
 
 
-    # Model parameters
+    # Original comment: Model parameters
     parser.add_argument('--model', type=str, default='lrcn',
                         help="deep learning model",
                         choices=['lrcn', 'gve', 'sc'])
@@ -56,21 +62,27 @@ def get_args(arg_str=None):
     parser.add_argument('--eval', type=str,
                         help="path of checkpoint to be evaluated")
 
+    # parse the argument string
     if arg_str is None:
         args = parser.parse_args()
     else:
         args = parser.parse_args(arg_str.split())
 
+    # dictionary for arguments {parameter: value}
     arg_vars = vars(args)
 
+    # if there is no checkpoint specified for evaluation, train is True; otherwise, train is false.
     arg_vars["train"] = not args.eval
+    # get the checkpoint for evaluation
     arg_vars["eval_ckpt"] = args.eval
+    # delete the eval parameter from the dictionary
     del arg_vars["eval"]
 
-    # GVE currently does not support pretrained models
+    # Original comment: GVE currently does not support pretrained models
     if arg_vars["model"] == "gve":
         arg_vars["pretrained_model"] = None
 
+    # set seed if given. Otherwise, set a default seed
     if args.torch_seed is not None:
         torch.manual_seed(arg_vars["torch_seed"])
     else:
@@ -80,6 +92,9 @@ def get_args(arg_str=None):
 
 
 def print_args(args):
+    """
+    Prints the parsed arguments
+    """
     space = 30
     print("Arguments:")
     for arg, value in vars(args).items():
