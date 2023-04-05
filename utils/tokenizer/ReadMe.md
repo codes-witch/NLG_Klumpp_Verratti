@@ -8,7 +8,7 @@ Provides a way to run the Stanford PTBTokenizer .jar file using Python.
 
 ### Tokenize caption
 
-This method returns a list of tokens for a given caption.
+This method takes a string caption and returns a list of tokens for said caption.
 
 ### Tokenize
 
