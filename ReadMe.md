@@ -8,7 +8,12 @@ data, please follow this link: TODO
 
 ## Files
 
-TODO state what is ours and what is not
+Most code has been written by the original authors. The code we have written can be found in the files `two_issues.py` 
+and `issue_alignment.py`. We have also extended the `evaluation_notes.py` file to generate captions for the literal speaker
+S0_AVG, which is mentioned in the paper but not implemented in the original repository. In said file, we have included
+two alternative ways of calculating S0_AVG: one is more true to the theoretical description of S0_AVG in the original 
+paper and the other one yields results that are closer to those reported by Nie et al. The latter is the one that 
+remains uncommented. For further discussion, refer to the report.  
 
 ### Evaluation
 
@@ -40,6 +45,9 @@ python3 evaluation_notes.py --exp_num <experiment_number>
 where `<experiment_number>` refers to the number corresponding to the desired speaker agent as explained above.
 
 ### RSA eval
+
+The `rsa_eval.py` file contains code that is used in `issue_alignment.py` and `two_issues.py` for determining whether 
+an issue has been resolved. It does so by first locating where certain body parts are mentioned in a caption
 
 ### Issue alignment
 
