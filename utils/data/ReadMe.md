@@ -18,7 +18,7 @@ corresponding data files must be in the specified locations. The MSCOCO dataset 
 in the original repository and must be obtained separately.
 
 The class contains methods to set parameters, access and return image embeddings and captions, and to 
-automatically evaluate generated captions against the gold standard (using metrics such as CIDEr (see
+automatically evaluate generated captions against the gold standard (using metrics such as CIDEr, for which see
 Vedantam et al. (2015): CIDEr: Consensus-based Image Description Evaluation).
 
 ### Cub Dataset
