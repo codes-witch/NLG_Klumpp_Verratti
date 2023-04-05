@@ -1,33 +1,26 @@
 from collections import defaultdict
-
 import random
 import torch
 import torch.nn.functional as F
 from os.path import join as pjoin
 from tqdm import tqdm
-
 from models.model_loader import ModelLoader
 from utils.data.data_prep_notes import DataPreparation
 from train.trainer_loader import TrainerLoader
 import utils.arg_parser
-
-from torch.distributions import Categorical
-
 import numpy as np
 import pickle
 
-from scipy.stats import entropy
-
-import matplotlib
-import matplotlib.pyplot as plt
 
 def logsumexp(inputs, dim=None, keepdim=False):
     """
     Our comments:
 
-    Logsumexp is used to avoid underflow. We are working in log-space. Here we will use this fucntion for
+    Logsumexp is used to avoid underflow. We are working in log-space. Here we will use this function for
     the normalization constant. These constants are normally in the denominator, but because we are in log-space, we
-    subtract
+    subtract.
+
+    In the original code, this was in a separate file called "rsa_utils.py".
 
     Original comments:
 
@@ -41,9 +34,11 @@ def logsumexp(inputs, dim=None, keepdim=False):
     Returns:
         Equivalent of log(sum(exp(inputs), dim=dim, keepdim=keepdim)).
     """
+    # Original comment:
     # For a 1-D array x (any array along a single dimension),
     # log sum exp(x) = s + log sum exp(x - s)
     # with s = max(x) being a common choice.
+
     if dim is None:
         inputs = inputs.view(-1)
         dim = 0
@@ -52,6 +47,7 @@ def logsumexp(inputs, dim=None, keepdim=False):
     if not keepdim:
         outputs = outputs.squeeze(dim)
     return outputs
+
 
 def get_args(argstring=None, verbose=True):
     """
@@ -112,7 +108,7 @@ class BirdDistractorDataset(object):
         # (obtained from a file in ./data/cub/attributes) and one for the opposite mapping. Here we populate all dicts
         else:
             self.filename_to_cub_img_id, self.cub_img_id_to_filename, \
-            self.attribute_matrix, self.random_idx_to_img_id = self.load_attribute_map_randomized(
+                self.attribute_matrix, self.random_idx_to_img_id = self.load_attribute_map_randomized(
                 pjoin(self.image_folder, "attributes", "randomized_attribute_matrix.npy"),
                 pjoin(self.image_folder, "attributes", "random_idx_to_file_idx.json"))
             self.img_id_to_random_idx = {}
@@ -611,7 +607,6 @@ class BirdDistractorDataset(object):
 
 
 def load_model(rsa_dataset, verbose=True):
-
     """
     Loads a model given the dataset, which contains information about the model to be loaded (args)
     """
@@ -623,7 +618,7 @@ def load_model(rsa_dataset, verbose=True):
         print(model, '\n')
         print("Loading Model Weights...")
 
-    # If there is CUDA available, use it, else, CPU
+    # if there is CUDA available, use it; else, CPU
     if torch.cuda.is_available():
         evaluation_state_dict = torch.load(rsa_dataset.args.eval_ckpt)
     else:
@@ -656,6 +651,7 @@ class RSA(object):
 
     The reason for additions is e^{\alpha log L1(i|c) + log p(i)}, where \alpha is rationality parameter
     """
+
     def compute_entropy(self, prob_mat, dim, keepdim=True):
         """
         Returns the entropy for the given probability matrix.
@@ -729,6 +725,7 @@ class IncRSA(RSA):
     Class extending RSA. Carries out the processing of the images and then applies the RSA methods for sentence
     generation
     """
+
     def __init__(self, model, rsa_dataset, lm_model=None):
         """
         Sets the necessary instance variables for the class
@@ -937,7 +934,7 @@ class IncRSA(RSA):
                 log_p *= active_batches.float().to(log_p.device)
 
             else:
-                predicted = outputs.max(1)[1] # [1] is basically argmax
+                predicted = outputs.max(1)[1]  # [1] is basically argmax
 
             # Update the captions that have reached the end: also those that now have predicted EOS
             reached_end = reached_end | predicted.eq(end_word).data
@@ -960,21 +957,5 @@ class IncRSA(RSA):
         return self.sentence_decode(sampled_ids)
 
 
-
-
 if __name__ == '__main__':
-
-    rsa_dataset = BirdDistractorDataset()
-    # rsa_dataset.get_valid_qs("195.Carolina_Wren/Carolina_Wren_0029_186212.jpg")
-    # rsa_dataset.filename_to_cub_img_id["195.Carolina_Wren/Carolina_Wren_0029_186212.jpg"]
-    # rsa_dataset.attribute_matrix[11470, 117]
-    # rsa_dataset.attribute_matrix[0, 117]
-    # rsa_dataset.attribute_matrix[[0, 2, 3], 117]
-
-
-    model = load_model(rsa_dataset)
-    incr = IncRSA(model, rsa_dataset)
-    # print(incr.sentence_decode([torch.tensor([400, 60]), torch.tensor([1]), torch.tensor([2])]))
-    #print(incr.semantic_speaker(['003.Sooty_Albatross/Sooty_Albatross_0075_796352.jpg', '007.Parakeet_Auklet/Parakeet_Auklet_0047_795956.jpg']))
-    print(incr.semantic_speaker(['003.Sooty_Albatross/Sooty_Albatross_0075_796352.jpg']))
-
+    pass
