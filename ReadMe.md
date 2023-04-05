@@ -47,7 +47,10 @@ where `<experiment_number>` refers to the number corresponding to the desired sp
 ### RSA eval
 
 The `rsa_eval.py` file contains code that is used in `issue_alignment.py` and `two_issues.py` for determining whether 
-an issue has been resolved. It does so by first locating where certain body parts are mentioned in a caption
+an issue has been resolved. 
+
+To use this file, one must first initialize an object the KeywordClassifier class by passing an instance of an 
+RSA dataset as a parameter. Then, one can use the method `` 
 
 ### Issue alignment
 
