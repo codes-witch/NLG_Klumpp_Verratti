@@ -7,8 +7,6 @@ import utils.arg_parser
 import argparse
 import numpy as np
 import json
-import matplotlib.pyplot as plt
-from PIL import Image
 
 from rsa_eval import load_inc_rsa_model
 from rsa_notes import BirdDistractorDataset
@@ -345,7 +343,7 @@ if __name__ == '__main__':
         if args.exp_num == 3:
             # manually set rationality to replicate paper
             args.rationality = 10
-            generate_caption_for_test(save_dir + "/S1_QH", max_cap_per_cell=args.max_cell_size,
+            generate_caption_for_test(save_dir + "/S1_CH", max_cap_per_cell=args.max_cell_size,
                                       rationality=args.rationality,
                                       entropy_penalty_alpha=args.entropy)
 

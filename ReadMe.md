@@ -8,6 +8,8 @@ data, please follow this link: TODO
 
 ## Files
 
+TODO state what is ours and what is not
+
 ### Evaluation
 
 `evaluation_notes.py` contains the code for generating sentences according to the different speaker agents defined in Nie et 

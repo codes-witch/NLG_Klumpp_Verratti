@@ -7,7 +7,7 @@ files are in the right location).
 
 import json
 
-from evaluation import BirdDistractorDataset
+from evaluation_notes import BirdDistractorDataset
 from rsa_eval import KeywordClassifier
 
 
@@ -144,7 +144,7 @@ if __name__ == '__main__':
     s0 = evaluate_captions("./results/random_run_0/S0_gen_captions.json")
     s1 = evaluate_captions("./results/random_run_1/S1_gen_captions.json")
     s1c = evaluate_captions("./results/random_run_2/S1_C_gen_captions.json")
-    s1ch = evaluate_captions("./results/random_run_3/S1_CH_wide_gen_captions.json")
+    s1ch = evaluate_captions("./results/random_run_3/S1_CH_gen_captions.json")
 
     # print scores
     for s, s_name in zip([s0, s1, s1c, s1ch], ["S0", "S1", "S1_C", "S1_CH"]):
