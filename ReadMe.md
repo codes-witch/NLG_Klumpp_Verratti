@@ -1,6 +1,10 @@
 # Main directory
 
-TODO intro
+The code for the full training, sentence generation and evaluation can be found here. 
+
+## Setup
+Before running, download the CUB  data and the best training checkpoint using the `rsa-file-setup.sh` file. For the COCO
+data, please follow this link: TODO
 
 ## Files
 
