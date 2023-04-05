@@ -44,14 +44,13 @@ class DataPreparation:
     def get_loader(self, dataset, batch_size=128, num_workers=4):
         """
         Get a data loader for the chosen dataset
-        
-        TODO: where is the dataloader actually used? e.g. in main, it seems to be instantiated but not accessed
+
         """
         
         # the dataset used for this method must correspond to the one specified for the DataPreparation instance
         assert isinstance(dataset, self.DatasetClass)
         
-        # shuffling is done in training only TODO why?
+        # shuffling is done in training only
         if dataset.split == 'train':
             shuffle = True
         else:
