@@ -16,6 +16,6 @@ class Logger(object):
         """
         Original comment: Log a scalar variable.
         """
-        # This is used for logging epoch and batch loss in main_notes.py as well as in the LCRN and
+        # This is used for logging epoch and batch loss in main.py as well as in the LCRN and
         # SentenceClassifier trainers
         self.writer.add_scalar(tag, value, step)
