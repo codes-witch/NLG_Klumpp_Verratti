@@ -13,21 +13,21 @@ were not used for our purposes. The original code is hosted in [this repository]
 The authors also mention that the CUB captioning model is modified from https://github.com/salaniz/pytorch-gve-lrcn.
 
 The code we have written can be found in the files `two_issues.py` and `issue_alignment.py`. We have also extended the 
-`evaluation_notes.py` file to generate captions for the literal speaker
+`caption_generation.py` file to generate captions for the literal speaker
 S0_AVG, which is mentioned in the paper but not implemented in the original repository. In said file, we have included
 two alternative ways of calculating S0_AVG: one is more true to the theoretical description of S0_AVG in the original 
 paper and the other one yields results that are closer to those reported by Nie et al. The latter is the one that is 
 active in the current code. For further discussion, refer to the report.  
 
-### Evaluation
+### Caption generation
 
-`evaluation_notes.py` contains the code for generating sentences according to the different speaker agents defined in Nie et 
+`caption_generation.py` contains the code for generating sentences according to the different speaker agents defined in Nie et 
 al. The captions are generated using the CUB dataset. 
 
 As it stands, all that is needed to produce captions for all RSA speaker agents is to run the following code:
 
 ```shell
-python3 evaluation_notes.py --run_time 5
+python3 caption_generation.py --run_time 5
 ```
 
 The `run_time` argument is used in a loop that goes over the five different speaker agents:
@@ -43,11 +43,12 @@ commenting out the current code as indicated in the file). Once that is done, on
 to run as follows:
 
 ```shell
-python3 evaluation_notes.py --exp_num <experiment_number>
+python3 caption_generation.py --exp_num <experiment_number>
 ```
 
 where `<experiment_number>` refers to the number corresponding to the desired speaker agent as explained above.
 
+Note that this file was named `evaluation.py` in the original repository.
 ### RSA eval
 
 The `rsa_eval.py` file contains code that is used in `issue_alignment.py` and `two_issues.py` for determining whether 
@@ -89,7 +90,8 @@ attributes
 
 ### Two issues
 
-`two_issues.py` contains the code used to generate and evaluate captions for two issues. The code is modified from `evaluation_notes.py` and `issue_alignment.py`. Running `two_issues.py` generates captions for all test images and all resolvable issue pairs in the CUB dataset and calculates issue alignment scores under different conditions. For a discussion of the general approach, the individual conditions, and the results, see the report.
+`two_issues.py` contains the code used to generate and evaluate captions for two issues. The code is modified from 
+`caption_generation.py` and `issue_alignment.py`. Running `two_issues.py` generates captions for all test images and all resolvable issue pairs in the CUB dataset and calculates issue alignment scores under different conditions. For a discussion of the general approach, the individual conditions, and the results, see the report.
 
 # References
 - Nie, Allen, Reuben Cohn-Gordon, and Christopher Potts. "Pragmatic issue-sensitive image captioning." arXiv preprint arXiv:2004.14451 (2020).

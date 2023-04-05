@@ -1,6 +1,6 @@
 # Models
 
-This folder contains the definitions of the models required for running `main.py` and `evaluation_notes`.
+This folder contains the definitions of the models required for running `main.py` and `caption_generation`.
 All code in this subdirectory was written by the original authors. All documentation is ours unless explicitly stated 
 (preceded by "Original comment(s)"). 
 

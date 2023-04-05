@@ -6,7 +6,7 @@ import json
 from rsa_eval import KeywordClassifier
 from rsa_eval import load_inc_rsa_model
 from rsa import BirdDistractorDataset
-from evaluation_notes import CUBPartitionDataset
+from caption_generation import CUBPartitionDataset
 
 def generate_caption_for_test_two_issues(save_file_prefix, max_cap_per_cell=400, rationality=20, # max capacity is higher
                                          entropy_penalty_alpha=0.4, no_retry=False, no_similar=False,

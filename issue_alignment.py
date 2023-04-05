@@ -7,7 +7,7 @@ files are in the right location).
 
 import json
 
-from evaluation_notes import BirdDistractorDataset
+from caption_generation import BirdDistractorDataset
 from rsa_eval import KeywordClassifier
 
 
