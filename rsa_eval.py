@@ -24,8 +24,8 @@ def load_inc_rsa_model(rsa_dataset):
 
 class KeywordClassifier(object):
     """
-    A class for finding resolved issues. Detects when a word that would resolve an issue is in the vicinity of the
-    relevant organ. Used for evaluating issue alignment in the issue_alignment and two_issues files.
+    A class for finding out which issues a caption resolves. Detects when a word that would resolve an issue is in the
+    vicinity of the relevant organ. Used for evaluating issue alignment in the issue_alignment and two_issues files.
     """
 
     def __init__(self, rsa_dataset):
@@ -167,12 +167,8 @@ class KeywordClassifier(object):
 
     def get_attr_descriptor_for_organ(self, organ_name, aspect_word, verbose=False):
         """
-        Gets all of the attribute labels that contain the organ name and the aspect given and puts them in a set
+        Gets all the attribute labels that contain the organ name and the aspect given and puts them in a set
 
-        :param organ_name:
-        :param aspect_word:
-        :param verbose:
-        :return:
         """
         # get all attributes with the organ and aspect we are looking for
         attrs = [t for t in self.rsa_dataset.attr_vocab_ls if organ_name in t and aspect_word in t]
@@ -193,7 +189,7 @@ class KeywordClassifier(object):
             # get descriptors describing wings (they all have 'wing' as the second element, so simply get the adjective
             # '-wing')
             elif 'wings' in a:
-                a = a.split('-')[0] # DANIELA the word after - is always wings
+                a = a.split('-')[0]
                 uniq_attrs.add(a)
             # in all other cases, just add the descriptor
             else:
