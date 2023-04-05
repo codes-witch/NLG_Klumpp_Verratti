@@ -122,7 +122,8 @@ def evaluate_captions_by_image(path):
 
         # if there is at least one resolvable issue for the image, calculate precision, recall, and F1 score
         if len(captions[img])>0:
-            # it may occur that no issue is resolved, hence sum_true_pos==0, in which case the precision is set to 0 by default
+            # if sum_true_pos==0 and sum_false_pos!=0, the precision is 0
+            # if both sum_true_pos==0 and sum_false_pos==0, we set the precision to 0 as well (although it cannot be properly calculated)
             if sum_true_pos > 0:
                 precisions.append(sum_true_pos/(sum_true_pos+sum_false_pos))
             else:
