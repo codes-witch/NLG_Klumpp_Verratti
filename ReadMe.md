@@ -54,7 +54,7 @@ RSA dataset as a parameter. Then, one can use the method ``
 
 ### Issue alignment
 
-`issue_alignment.py` contains the code used to evaluate the issue alignment as described in the report. We included two different methods of score averaging: in one case, all image-issue pairs are weighted equally, in the other, scores are calculated for each image separately and averaged afterwards. Running `issue_alignment.py` calculates issue alignment scores (precision, recall, and F-score) for both and for all speaker agents (S0, S1, S1_C, S1_C+H, and S0_AVG) and print them to the screen.
+`issue_alignment.py` contains the code used to evaluate the issue alignment as described in the report. We included two different methods of score averaging: in one case, all image-issue pairs are weighted equally, in the other, scores are calculated for each image separately and averaged afterwards. Running `issue_alignment.py` calculates issue alignment scores (precision, recall, and F-score) for both and for all speaker agents (S0, S1, S1_C, S1_C+H, and S0_AVG) and prints them to the screen.
 
 ### Main
 
