@@ -62,4 +62,4 @@ RSA dataset as a parameter. Then, one can use the method ``
 
 ### Two issues
 
-`two_issues.py` contains the code used to generate and evaluate captions for two issues. The code is modified from `evaluation_notes.py` and `issue_alignment.py`. Running `two_issues.py` generates captions for all test images and all resolvable issue pairs in the CUB dataset and calculate issue alignment scores under different conditions. For a discussion of the general approach, the individual conditions, and the results, see the report.
+`two_issues.py` contains the code used to generate and evaluate captions for two issues. The code is modified from `evaluation_notes.py` and `issue_alignment.py`. Running `two_issues.py` generates captions for all test images and all resolvable issue pairs in the CUB dataset and calculates issue alignment scores under different conditions. For a discussion of the general approach, the individual conditions, and the results, see the report.
