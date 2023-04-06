@@ -20,9 +20,8 @@ conda env create -f environment.yml
 conda activate gve-lrcn
 ```
 
-4. Download pre-trained model and data (Note: For the COCO data, please follow this link: https://cocodataset.org/#download )
-
-TODO CHECK WHAT NEEDS TO BE DOWNLOADED
+4. Download pre-trained model and data (Note: For the COCO data, please follow this link and download the train and 
+validation data (2014), as well as the annotations: https://cocodataset.org/#download )
 
 ```bash
 sh rsa-file-setup.sh 
