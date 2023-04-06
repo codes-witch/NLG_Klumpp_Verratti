@@ -338,8 +338,8 @@ def evaluate_captions_by_image(path):
                         if kc.classify_parts_aspect(other_part, other_aspect, cap, tokenize=True):
                             sum_false_pos += 1
 
-        # if there is at least one resolvable issue for the image, calculate precision and recalls
-        if len(captions[img]) > 0:
+        # if there are at least two resolvable issue for the image, calculate precision and recalls
+        if len(captions[img]) > 1:
             # if neither of the target issues were resolved, or no issues were resolved at all,
             # the precision is set to 0
             if sum_full_true_pos+sum_part_true_pos > 0:
@@ -374,13 +374,13 @@ if __name__ == '__main__':
 
     dir = "./results_two_issues/"
 
-    # generate captions
-    generate_captions(root_dir=dir, id="S0", condition="S0")
-    generate_captions(root_dir=dir, id="S1", condition="S1", rationality=3) # same rationality setting as for one issue
-    generate_captions(root_dir=dir, id="S1_Cn", condition="S1_C", distractors="narrow", rationality=10) # same rationality as for one issue
-    generate_captions(root_dir=dir, id="S1_Cw", condition="S1_C", distractors="wide", rationality=10) # same rationality as for one issue
-    generate_captions(root_dir=dir, id="S1_CHn", condition="S1_CH", distractors="narrow", rationality=10, entropy=0.4) # same rationality as for one issue
-    generate_captions(root_dir=dir, id="S1_CHw", condition="S1_CH", distractors="wide", rationality=10, entropy=0.4) # same rationality as for one issue
+    # # generate captions
+    # generate_captions(root_dir=dir, id="S0", condition="S0")
+    # generate_captions(root_dir=dir, id="S1", condition="S1", rationality=3) # same rationality setting as for one issue
+    # generate_captions(root_dir=dir, id="S1_Cn", condition="S1_C", distractors="narrow", rationality=10) # same rationality as for one issue
+    # generate_captions(root_dir=dir, id="S1_Cw", condition="S1_C", distractors="wide", rationality=10) # same rationality as for one issue
+    # generate_captions(root_dir=dir, id="S1_CHn", condition="S1_CH", distractors="narrow", rationality=10, entropy=0.4) # same rationality as for one issue
+    # generate_captions(root_dir=dir, id="S1_CHw", condition="S1_CH", distractors="wide", rationality=10, entropy=0.4) # same rationality as for one issue
     generate_captions(root_dir=dir, id="S0_Avg", condition="S0_Avg" )
 
     # evaluate captions for the default calculation method
