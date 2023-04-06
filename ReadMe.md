@@ -114,12 +114,17 @@ python3 main.py --model sc --dataset cub
 
 ### RSA
 
-`rsa.py` contains three classes: BirdDistractorDataset, RSA and IncrRSA. 
+`rsa.py` contains three classes: BirdDistractorDataset, IncRSA and RSA.
 
 `BirdDistractorDataset` allows us to manage the dataset with CUB images. It loads all the data related to class labels, 
 attributes, images, batches and issues and prepares it to be accessed. 
 
-`RSA` contains the code for computing TODO
+`IncrRSA` contains the code for computing the captions for the sematic and pragmatic speaker. S1_C and S1_H are calculated with the 
+function `greedy_pragmatic_speaker_free` by passing different parameters for rationality and entropy penalty as the arguments.
+
+The RSA logprobs ("pragmatic array" in the comments) used for `greedy_pragmatic_speaker` are obtained from the function `compute_pragmatic_speaker_w_similarity`
+in the class `RSA` in the same file. 
+``
 
 ### Two issues
 
