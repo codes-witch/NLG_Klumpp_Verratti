@@ -1,7 +1,7 @@
 # Utils/data
 
 This folder contains code to load and use the CUB and COCO datasets. This code is needed for both `main.py` 
-and `evaluation.py`. All code in this subdirectory was written by the original authors. All documentation is 
+and `caption_generation.py`. All code in this subdirectory was written by the original authors. All documentation is 
 ours unless explicitly stated otherwise (preceded by "Original comment(s)").
 
 ## Files
