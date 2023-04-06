@@ -8,11 +8,12 @@ from rsa_eval import load_inc_rsa_model
 from rsa import BirdDistractorDataset
 from caption_generation import CUBPartitionDataset
 
+
 def generate_caption_for_test_two_issues(save_file_prefix, max_cap_per_cell=400, rationality=20, # max capacity is higher
                                          entropy_penalty_alpha=0.4, no_retry=False, no_similar=False,
                                          distractors="wide", s_avg=False):
     """
-    Modified from generate_caption_for_test() in evaluation.py
+    Modified from generate_caption_for_test() in caption_generation.py
 
     Generates pragmatic speaker captions for two issues for the images of the test set.
     Generates Json files with dictionaries
@@ -136,7 +137,7 @@ def generate_caption_for_test_two_issues(save_file_prefix, max_cap_per_cell=400,
 
 def generate_literal_caption_for_test_two_issues(save_file_prefix):
     """
-        Modified from generate_literal_caption_for_test() in evaluation.py. This works exactly identically,
+        Modified from generate_literal_caption_for_test() in caption_generation.py. This works exactly identically,
         except that it returns a dictionary of nested dictionaries instead of a dictionary of simple dictionaries.
 
         Generates literal speaker captions for the images of the test set. Generates Json file with a dictionary
@@ -181,7 +182,7 @@ def generate_literal_caption_for_test_two_issues(save_file_prefix):
 def generate_captions(root_dir="./results/", id="S0", condition="S0", distractors="wide", rationality=10, entropy=0.4,
                       max_cell_size=400):
     """
-    This is based on the main section of evaluation.py. Calling it generates the captions for the chosen condition.
+    This is based on the main section of caption_generation.py. Calling it generates the captions for the chosen condition.
     """
 
     # specify directory for storing the generated captions
@@ -370,17 +371,20 @@ if __name__ == '__main__':
     """
     Running this main section executes the whole caption generation and evaluation process (for all conditions
     considered in the report, under both score calculation methods).
+    
+    It is worth noting that running this code will take very long. We recommend running it with a smaller test file, 
+    but in this case, we cannot guarantee that the results will match the ones we are reporting. 
     """
 
     dir = "./results_two_issues/"
 
-    # # generate captions
-    # generate_captions(root_dir=dir, id="S0", condition="S0")
-    # generate_captions(root_dir=dir, id="S1", condition="S1", rationality=3) # same rationality setting as for one issue
-    # generate_captions(root_dir=dir, id="S1_Cn", condition="S1_C", distractors="narrow", rationality=10) # same rationality as for one issue
-    # generate_captions(root_dir=dir, id="S1_Cw", condition="S1_C", distractors="wide", rationality=10) # same rationality as for one issue
-    # generate_captions(root_dir=dir, id="S1_CHn", condition="S1_CH", distractors="narrow", rationality=10, entropy=0.4) # same rationality as for one issue
-    # generate_captions(root_dir=dir, id="S1_CHw", condition="S1_CH", distractors="wide", rationality=10, entropy=0.4) # same rationality as for one issue
+    # generate captions
+    generate_captions(root_dir=dir, id="S0", condition="S0")
+    generate_captions(root_dir=dir, id="S1", condition="S1", rationality=3) # same rationality setting as for one issue
+    generate_captions(root_dir=dir, id="S1_Cn", condition="S1_C", distractors="narrow", rationality=10) # same rationality as for one issue
+    generate_captions(root_dir=dir, id="S1_Cw", condition="S1_C", distractors="wide", rationality=10) # same rationality as for one issue
+    generate_captions(root_dir=dir, id="S1_CHn", condition="S1_CH", distractors="narrow", rationality=10, entropy=0.4) # same rationality as for one issue
+    generate_captions(root_dir=dir, id="S1_CHw", condition="S1_CH", distractors="wide", rationality=10, entropy=0.4) # same rationality as for one issue
     generate_captions(root_dir=dir, id="S0_Avg", condition="S0_Avg" )
 
     # evaluate captions for the default calculation method
