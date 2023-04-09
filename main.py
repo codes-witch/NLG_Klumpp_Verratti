@@ -89,6 +89,11 @@ if __name__ == '__main__':
         print("Evaluating ...")
         vars(args)['num_epochs'] = 1
 
+    # OWN CODE
+    # suppress evaluation (to avoid errors)
+    if args.train and args.without_eval:
+        evaluator.REQ_EVAL = False
+
     # the following loop goes through the specified number of epochs, either training and evaluating or only
     # evaluating
     max_score = 0
@@ -105,33 +110,46 @@ if __name__ == '__main__':
             # training settings with .train()
             model.eval()
             result = evaluator.train_epoch()
+
+            # MODIFIED CODE
+            # the original code had score = result if REQ_EVAL is False, which will lead to an error because the
+            # following code (logging and comparing to max_score) expects a number
+            # hence, we only calculate a score if REQ_EVAL is True, otherwise we only store the state_dict
             if evaluator.REQ_EVAL:
                 score = val_dataset.eval(result, checkpoint_path)
+                model.train()
+
+                # write to log
+                logger.scalar_summary('score', score, trainer.curr_epoch)
+
+                # Original comment: Save the models
+                checkpoint = {'epoch': trainer.curr_epoch,
+                              'max_score': max_score,
+                              'optimizer': trainer.optimizer.state_dict()}
+                checkpoint_path += ".pth"
+                torch.save(model.state_dict(), checkpoint_path)
+                torch.save(checkpoint, os.path.join(job_path,
+                                                    "training_checkpoint.pth"))
+                # Check whether this is the best score we have obtained so far. If so, save as such
+                if score > max_score:
+                    max_score = score
+                    link_name = "best-ckpt.pth"
+                    link_path = os.path.join(job_path, link_name)
+                    if os.path.islink(link_path):
+                        os.unlink(link_path)
+                    dir_fd = os.open(os.path.dirname(link_path), os.O_RDONLY)
+                    os.symlink(os.path.basename(checkpoint_path), link_name, dir_fd=dir_fd)
+                    os.close(dir_fd)
             else:
-                score = result
-            model.train()
+                model.train()
 
-            # write to log
-            logger.scalar_summary('score', score, trainer.curr_epoch)
-
-            # Original comment: Save the models
-            checkpoint = {'epoch': trainer.curr_epoch,
-                          'max_score': max_score,
-                          'optimizer': trainer.optimizer.state_dict()}
-            checkpoint_path += ".pth"
-            torch.save(model.state_dict(), checkpoint_path)
-            torch.save(checkpoint, os.path.join(job_path,
-                                                "training_checkpoint.pth"))
-            # Check whether this is the best score we have obtained so far. If so, save as such
-            if score > max_score:
-                max_score = score
-                link_name = "best-ckpt.pth"
-                link_path = os.path.join(job_path, link_name)
-                if os.path.islink(link_path):
-                    os.unlink(link_path)
-                dir_fd = os.open(os.path.dirname(link_path), os.O_RDONLY)
-                os.symlink(os.path.basename(checkpoint_path), link_name, dir_fd=dir_fd)
-                os.close(dir_fd)
+                # Original comment: Save the models
+                checkpoint = {'epoch': trainer.curr_epoch,
+                              'optimizer': trainer.optimizer.state_dict()}
+                checkpoint_path += ".pth"
+                torch.save(model.state_dict(), checkpoint_path)
+                torch.save(checkpoint, os.path.join(job_path,
+                                                    "training_checkpoint.pth"))
 
         else:
             # here, only the evaluation is done.
