@@ -7,6 +7,7 @@ from models.pretrained_models import PretrainedModel
 Utility file to parse and print arguments from an argument string.
 """
 
+
 def get_args(arg_str=None):
     parser = argparse.ArgumentParser()
 
@@ -61,6 +62,10 @@ def get_args(arg_str=None):
 
     parser.add_argument('--eval', type=str,
                         help="path of checkpoint to be evaluated")
+
+    # OWN CODE
+    # we add an argument that allows to suppress the evaluation in training
+    parser.add_argument('--without_eval', action='store_true', default=False, help="suppress evaluation in training")
 
     # parse the argument string
     if arg_str is None:
