@@ -97,18 +97,19 @@ there are any words that would resolve the issue within a context window of word
 
 The code in `main.py` can be used to train and/or evaluate the models GVE (with CUB data) and LRCN (with MSCOCO data) 
 and SentenceClassifier (with CUB captions). Evaluation does not refer to the RSA extension of the models, but rather to 
-some automatic measures (e.g. CIDEr, Vedantam et al. (2015)).
+some automatic measures (e.g. CIDEr, Vedantam et al. (2015)). We have modified the code to run also without evaluating 
+after each epoch due to the fact that this evaluation resulted in an exception. For this, we use ``--without_eval``
 
 As a default, the code is run for the LRCN model with COCO as a dataset. To run it with the GVE model, run the following code:
 
 ```shell
-python3 main.py --model gve --dataset cub
+python3 main.py --model gve --dataset cub --without_eval
 ```
 
 For the sentence classifier, run:
 
 ```shell
-python3 main.py --model sc --dataset cub
+python3 main.py --model sc --dataset cub --without_eval
 ```
 
 ### RSA
@@ -123,7 +124,7 @@ function `greedy_pragmatic_speaker_free` by passing different parameters for rat
 
 The RSA logprobs ("pragmatic array" in the comments) used for `greedy_pragmatic_speaker` are obtained from the function `compute_pragmatic_speaker_w_similarity`
 in the class `RSA` in the same file. 
-``
+
 
 ### Two issues
 
